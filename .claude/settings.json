@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "linkedin-content-os": {
+      "command": "uv",
+      "args": ["run", "python", "mcp/server.py"]
+    }
+  },
+  "permissions": {
+    "allow": ["Read", "Edit", "Write", "Bash(uv run python pipeline/*)"]
+  }
+}

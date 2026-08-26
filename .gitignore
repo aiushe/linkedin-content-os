@@ -1,0 +1,23 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+
+# Rebuildable market data and local indexes
+intel/raw/*
+intel/images/*
+intel/db/*
+intel/posts/*.json
+intel/posts/*.npy
+intel/posts/*.npz
+intel/story-index.json
+intel/story-vectors.npy
+intel/market-vectors.npy
+
+# Keep the folders in a fresh clone without tracking generated content.
+!intel/raw/.gitkeep
+!intel/images/.gitkeep
+!intel/posts/.gitkeep
+!intel/db/.gitkeep

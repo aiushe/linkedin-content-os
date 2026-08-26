@@ -1,0 +1,79 @@
+from datetime import datetime, timedelta, timezone
+
+from pipeline.common import canonical_post, split_frontmatter
+from pipeline.voice import aggregate, score_text
+from pipeline.xfactor import score_posts
+
+
+def test_normalization_maps_common_actor_shape():
+    post = canonical_post(
+        {
+            "id": "123",
+            "postText": "A useful first line\nSecond line\nThird line\nFourth line",
+            "url": "https://www.linkedin.com/posts/example",
+            "createdAt": "2026-08-01T10:00:00Z",
+            "author": {"publicIdentifier": "ada", "name": "Ada Lovelace", "headline": "Builder"},
+            "engagement": {"likes": "1.2K", "comments": 4, "reposts": 2},
+        },
+        scraped_at="2026-08-02T00:00:00Z",
+    )
+    assert post["id"] == "linkedin:123"
+    assert post["hook"].count("\n") == 2
+    assert post["likes"] == 1200
+    assert post["engagement"] == 1222
+    assert post["author_handle"] == "ada"
+
+
+def test_xfactor_excludes_current_post_and_requires_sample():
+    current = datetime(2026, 2, 1, tzinfo=timezone.utc)
+    posts = []
+    for index in range(10):
+        posted = current - timedelta(days=10 - index)
+        posts.append(
+            {
+                "id": str(index),
+                "author_handle": "ada",
+                "posted_at": posted.isoformat(),
+                "likes": 10,
+                "comments": 0,
+                "shares": 0,
+            }
+        )
+    target = {
+        "id": "target",
+        "author_handle": "ada",
+        "posted_at": current.isoformat(),
+        "likes": 50,
+        "comments": 0,
+        "shares": 0,
+    }
+    posts.append(target)
+    score_posts(posts, minimum_sample=10)
+    assert target["author_baseline"] == 10
+    assert target["x_factor"] == 5
+    assert posts[0]["x_factor"] is None
+
+
+def test_story_frontmatter_parses_verified_metrics():
+    metadata, body = split_frontmatter(
+        """---
+id: demo
+pillars: [apis, product]
+metrics:
+  - claim: Reduced time
+    proof: Dashboard
+    verified: true
+---
+
+A real story."""
+    )
+    assert metadata["pillars"] == ["apis", "product"]
+    assert metadata["metrics"][0]["verified"] is True
+    assert body == "A real story."
+
+
+def test_voice_score_flags_a_banned_tell_without_fingerprint():
+    profile = aggregate(["I shipped the first version. It was messy, then useful."])
+    result = score_text("Here's the thing: it's not X, it's Y.", profile)
+    assert "here's the thing" in result["banned_tells"]
+    assert "it's not X, it's Y" in result["banned_tells"]
