@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+from pipeline import common
 from pipeline.common import canonical_post, split_frontmatter
 from pipeline.voice import aggregate, score_text
 from pipeline.xfactor import score_posts
@@ -77,3 +78,22 @@ def test_voice_score_flags_a_banned_tell_without_fingerprint():
     result = score_text("Here's the thing: it's not X, it's Y.", profile)
     assert "here's the thing" in result["banned_tells"]
     assert "it's not X, it's Y" in result["banned_tells"]
+
+
+def test_private_identity_and_story_bank_take_precedence(tmp_path, monkeypatch):
+    private = tmp_path / "private"
+    corpus = tmp_path / "corpus"
+    (private / "identity").mkdir(parents=True)
+    (corpus / "identity").mkdir(parents=True)
+    (private / "identity" / "truth-table.md").write_text("private truth", encoding="utf-8")
+    (corpus / "identity" / "truth-table.md").write_text("template truth", encoding="utf-8")
+    (private / "stories").mkdir()
+    (private / "stories" / "local-story.md").write_text(
+        "---\nid: local-story\ntitle: Local only\nmetrics: []\n---\nPrivate story.",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(common, "PRIVATE", private)
+    monkeypatch.setattr(common, "CORPUS", corpus)
+    monkeypatch.setattr(common, "ROOT", tmp_path)
+    assert common.identity_file("truth-table.md").read_text(encoding="utf-8") == "private truth"
+    assert common.load_stories()[0]["path"] == "private/stories/local-story.md"

@@ -11,19 +11,19 @@ The reusable system is built. Do these in order; none require sharing credential
 
 ## 2. Seed the truth corpus (required before any factual drafting)
 
-- Paste your complete live profile into `corpus/profile/current.md`.
+- Paste your complete live profile into `private/profile/current.md`.
 - Add your current/long-form résumé.
-- Add five target JDs for the *same* role family to `corpus/targets/jds/`.
-- Fill `corpus/identity/truth-table.md` with every claim/metric, supporting proof, and date.
+- Add five target JDs for the *same* role family to `private/targets/jds/`.
+- Fill `private/identity/truth-table.md` with every claim/metric, supporting proof, and date.
 - Book a 90-minute story-bank interview. We will turn your answers into 15–25 files from
   `corpus/stories/_TEMPLATE.md`; imperfect or unverified metrics are fine when marked as such.
 
 ## 3. Capture your voice (required before relying on draft automation)
 
-- Add at least ~5,000 words of real writing to `corpus/identity/voice/samples/` (10,000 is
+- Add at least ~5,000 words of real writing to `private/identity/voice/samples/` (10,000 is
   ideal): thoughtful emails, docs, post-mortems, Slack/Discord, or voice-note transcripts.
-- Mark 3–5 pieces you love in `corpus/identity/voice/exemplars/`.
-- Add rejected AI writing in `corpus/identity/voice/negative/`, with a one-line note on why it
+- Mark 3–5 pieces you love in `private/identity/voice/exemplars/`.
+- Add rejected AI writing in `private/identity/voice/negative/`, with a one-line note on why it
   fails your voice.
 - Then run `uv run python pipeline/voice.py fingerprint`.
 

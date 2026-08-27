@@ -8,9 +8,10 @@ claims on your behalf.
 
 1. Install Python 3.11+ and [uv](https://docs.astral.sh/uv/), then run `uv sync --extra dev`.
 2. Copy `.env.example` to `.env`; only add external keys when you reach those phases.
-3. Fill the templates in `corpus/identity/`, paste your profile into
-   `corpus/profile/current.md`, and add stories via `corpus/stories/_TEMPLATE.md`.
-4. Add five target job descriptions to `corpus/targets/jds/`, then follow the
+3. Put personal material in the ignored `private/` folder: copy the identity templates from
+   `corpus/identity/`, paste your profile into `private/profile/current.md`, and add stories
+   using `corpus/stories/_TEMPLATE.md` as the format.
+4. Add five target job descriptions to `private/targets/jds/`, then follow the
    `jd-keyword-miner` skill.
 5. Run `uv run python pipeline/index_corpus.py` whenever stories change and
    `uv run python pipeline/voice.py fingerprint` when you have writing samples.

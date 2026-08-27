@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 try:
-    from .common import CORPUS, write_json
+    from .common import CORPUS, PRIVATE, ensure_private_identity_file, identity_file, write_json
 except ImportError:  # pragma: no cover - direct script execution
-    from common import CORPUS, write_json
+    from common import CORPUS, PRIVATE, ensure_private_identity_file, identity_file, write_json
 
 
 WORD_RE = re.compile(r"\b[\w']+\b")
@@ -21,7 +21,8 @@ HEDGE_WORDS = {"maybe", "perhaps", "probably", "usually", "generally", "somewhat
 
 
 def sample_paths() -> List[Path]:
-    base = CORPUS / "identity" / "voice" / "samples"
+    private_base = PRIVATE / "identity" / "voice" / "samples"
+    base = private_base if private_base.exists() else CORPUS / "identity" / "voice" / "samples"
     return [
         path
         for path in sorted(base.rglob("*"))
@@ -121,7 +122,7 @@ def aggregate(samples: List[str]) -> Dict[str, Any]:
 
 
 def replace_fingerprint(profile: Dict[str, Any]) -> None:
-    path = CORPUS / "identity" / "voice.md"
+    path = ensure_private_identity_file("voice.md")
     text = path.read_text(encoding="utf-8")
     block = "```json\n" + json.dumps(profile, indent=2) + "\n```"
     updated, count = re.subn(r"```json\n.*?\n```", block, text, count=1, flags=re.DOTALL)
@@ -131,13 +132,13 @@ def replace_fingerprint(profile: Dict[str, Any]) -> None:
 
 
 def load_fingerprint() -> Dict[str, Any]:
-    text = (CORPUS / "identity" / "voice.md").read_text(encoding="utf-8")
+    text = identity_file("voice.md").read_text(encoding="utf-8")
     match = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
     return json.loads(match.group(1)) if match else {}
 
 
 def banned_tells() -> List[str]:
-    text = (CORPUS / "identity" / "voice.md").read_text(encoding="utf-8")
+    text = identity_file("voice.md").read_text(encoding="utf-8")
     section = re.search(r"## Starting banned tells\n(.*?)(?:\n## |\Z)", text, re.DOTALL)
     if not section:
         return []

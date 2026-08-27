@@ -5,7 +5,7 @@ description: Draft a grounded first-person post showing how the user thinks and 
 
 # Authority post
 
-1. Choose a pillar from `corpus/identity/pillars.md`.
+1. Choose a pillar from `private/identity/pillars.md` (or the tracked template before it exists).
 2. Retrieve a proven format (`find_viral_posts`) and 3–5 relevant stories (`search_stories`).
 3. Load the truth table and use only verified claims.
 4. Draft: 2–3-line hook → bridge/story → deep educational meat → two-line contrast/mic drop →

@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import List
 
 try:
-    from .common import CORPUS, ROOT
+    from .common import PRIVATE, ROOT
 except ImportError:  # pragma: no cover - direct script execution
-    from common import CORPUS, ROOT
+    from common import PRIVATE, ROOT
 
 
 def normalized_lines(path: Path) -> List[str]:
@@ -73,7 +73,7 @@ def main() -> None:
     parser.add_argument("published", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    output = args.output or CORPUS / "identity" / "voice" / "edits" / f"{args.published.stem}.md"
+    output = args.output or PRIVATE / "identity" / "voice" / "edits" / f"{args.published.stem}.md"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(compare(args.generated, args.published), encoding="utf-8")
     print(output.relative_to(ROOT))

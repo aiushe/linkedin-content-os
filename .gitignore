@@ -5,6 +5,9 @@ __pycache__/
 .ruff_cache/
 *.py[cod]
 
+# Personal corpus: intentionally local-only. Never stage this directory.
+private/
+
 # Rebuildable market data and local indexes
 intel/raw/*
 intel/images/*

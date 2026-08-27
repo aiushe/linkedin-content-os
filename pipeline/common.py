@@ -16,6 +16,34 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS = ROOT / "corpus"
 INTEL = ROOT / "intel"
+PRIVATE = ROOT / "private"
+
+
+def identity_file(name: str) -> Path:
+    """Return a local personal identity file when present, otherwise its tracked template."""
+    private_path = PRIVATE / "identity" / name
+    return private_path if private_path.exists() else CORPUS / "identity" / name
+
+
+def ensure_private_identity_file(name: str) -> Path:
+    """Create a local copy of an identity template before writing user-specific data."""
+    destination = PRIVATE / "identity" / name
+    if destination.exists():
+        return destination
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    template = CORPUS / "identity" / name
+    if template.exists():
+        destination.write_text(template.read_text(encoding="utf-8"), encoding="utf-8")
+    else:
+        destination.touch()
+    return destination
+
+
+def private_stories_dir() -> Path:
+    """Return the ignored story-bank directory, creating it only when a story is written."""
+    destination = PRIVATE / "stories"
+    destination.mkdir(parents=True, exist_ok=True)
+    return destination
 
 
 def utc_now() -> str:
@@ -259,13 +287,15 @@ def parse_scalar(value: str) -> Any:
 
 def load_stories() -> List[Dict[str, Any]]:
     stories: List[Dict[str, Any]] = []
-    for path in sorted((CORPUS / "stories").glob("*.md")):
-        if path.name.startswith("_"):
-            continue
-        metadata, body = split_frontmatter(path.read_text(encoding="utf-8"))
-        if not metadata:
-            continue
-        metadata["path"] = str(path.relative_to(ROOT))
-        metadata["body"] = body.strip()
-        stories.append(metadata)
+    story_dirs = (PRIVATE / "stories", CORPUS / "stories")
+    for story_dir in story_dirs:
+        for path in sorted(story_dir.glob("*.md")):
+            if path.name.startswith("_"):
+                continue
+            metadata, body = split_frontmatter(path.read_text(encoding="utf-8"))
+            if not metadata:
+                continue
+            metadata["path"] = str(path.relative_to(ROOT))
+            metadata["body"] = body.strip()
+            stories.append(metadata)
     return stories

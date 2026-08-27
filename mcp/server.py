@@ -20,11 +20,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from pipeline.common import (
-    CORPUS,
     INTEL,
     content_hash,
+    identity_file,
     load_all_posts,
     parse_datetime,
+    private_stories_dir,
     read_json,
     slugify,
 )
@@ -85,7 +86,7 @@ def search_stories(
 @mcp.tool()
 def get_truth_table() -> Dict[str, str]:
     """Return the raw claim allowlist; writers must use it before stating facts or metrics."""
-    path = CORPUS / "identity" / "truth-table.md"
+    path = identity_file("truth-table.md")
     return {"path": str(path.relative_to(ROOT)), "content": path.read_text(encoding="utf-8")}
 
 
@@ -221,7 +222,7 @@ def log_story(text: str, pillars: List[str], metrics: Optional[List[str]] = None
         (line.strip("# ") for line in text.splitlines() if line.strip()), "Untitled story"
     )[:100]
     identifier = f"{slugify(title)}-{content_hash(text)[:6]}"
-    destination = CORPUS / "stories" / f"{identifier}.md"
+    destination = private_stories_dir() / f"{identifier}.md"
     if destination.exists():
         return {"status": "exists", "path": str(destination.relative_to(ROOT))}
     metric_lines = metrics or []
@@ -259,7 +260,7 @@ def log_story(text: str, pillars: List[str], metrics: Optional[List[str]] = None
             "",
             "## Verification needed",
             "",
-            "- Add evidence to each metric and then update `corpus/identity/truth-table.md`.",
+            "- Add evidence to each metric and then update `private/identity/truth-table.md`.",
             "",
         ]
     )

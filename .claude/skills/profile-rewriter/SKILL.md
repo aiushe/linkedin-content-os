@@ -5,7 +5,9 @@ description: Rewrite a LinkedIn profile for a focused target role, using only re
 
 # Profile rewriter
 
-Read `corpus/profile/current.md`, `corpus/identity/{positioning,icp,pillars,truth-table,voice}.md`,
+Read the personal files in `private/profile/current.md` and
+`private/identity/{positioning,icp,pillars,truth-table,voice}.md`. Use the matching `corpus/`
+files only as templates when a personal file does not yet exist. Then read
 the latest keyword brief, and the reference files in this skill. If no focused keyword brief or
 positioning exists, stop and ask for those inputs rather than guessing a career target.
 
