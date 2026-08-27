@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from agent.gates import safe_voice_score
+from pipeline.claims import check as check_claims_report
 from pipeline.common import (
     INTEL,
     content_hash,
@@ -88,6 +90,20 @@ def get_truth_table() -> Dict[str, str]:
     """Return the raw claim allowlist; writers must use it before stating facts or metrics."""
     path = identity_file("truth-table.md")
     return {"path": str(path.relative_to(ROOT)), "content": path.read_text(encoding="utf-8")}
+
+
+@mcp.tool()
+def check_claims(draft_text: str) -> Dict[str, Any]:
+    """Run the exact deterministic claim gate used by the LangGraph harness."""
+    from dataclasses import asdict
+
+    return asdict(check_claims_report(draft_text))
+
+
+@mcp.tool()
+def get_voice_report(draft_text: str) -> Dict[str, Any]:
+    """Run the fail-closed deterministic voice gate used by the LangGraph harness."""
+    return safe_voice_score(draft_text)
 
 
 @mcp.tool()
@@ -274,4 +290,4 @@ def log_story(text: str, pillars: List[str], metrics: Optional[List[str]] = None
 
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="stdio")

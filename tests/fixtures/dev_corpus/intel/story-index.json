@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "stories": [
+    {
+      "id": "synthetic-routing",
+      "title": "Synthetic routing decision",
+      "date": "2026-Q1",
+      "pillars": [
+        "synthetic-product"
+      ],
+      "stage": "0-to-1",
+      "role_context": "Synthetic PM",
+      "tension": "A fictional queue lacked useful routing labels.",
+      "turn": "The fictional team treated labels as a product decision.",
+      "result": "The synthetic dashboard recorded a 30% routing-time reduction.",
+      "lesson": "Operational taxonomy can be product work.",
+      "emotions": [
+        "curiosity"
+      ],
+      "metrics": [
+        {
+          "claim": "Reduced routing time by 30%",
+          "proof": "Synthetic Operations Dashboard",
+          "verified": true
+        },
+        {
+          "claim": "Improved satisfaction by 90%",
+          "proof": "",
+          "verified": false
+        }
+      ],
+      "has_verified_metric": true,
+      "path": "private/stories/synthetic-routing.md",
+      "content_hash": "a624ae9de376e46f480aabd88b896e21f8378867d1d08acfabfe59f399ac2238"
+    }
+  ]
+}

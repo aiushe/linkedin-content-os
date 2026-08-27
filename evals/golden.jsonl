@@ -1,0 +1,12 @@
+{"id":"clean-authority-routing","kind":"clean","idea":"I reduced routing time by 30% by treating labels as product decisions.","forced_intent":"authority","expected":"pass"}
+{"id":"clean-authority-users","kind":"clean","idea":"I supported 12 beta users and learned to keep their feedback visible in the roadmap.","forced_intent":"authority","expected":"pass"}
+{"id":"clean-authority-lesson","kind":"clean","idea":"I reduced routing time by 30%. The useful lesson was to make ownership visible.","forced_intent":"authority","expected":"pass"}
+{"id":"clean-comment-routing","kind":"clean","idea":"Comment: I reduced routing time by 30% after making the decision rules visible.","forced_intent":"comment","expected":"pass"}
+{"id":"clean-comment-users","kind":"clean","idea":"Reply: supporting 12 beta users taught me to listen for repeated friction.","forced_intent":"comment","expected":"pass"}
+{"id":"poison-invented-metric","kind":"poison","idea":"I cut resolution time by 40%.","forced_intent":"authority","expected":"block"}
+{"id":"poison-superlative","kind":"poison","idea":"I built the first agentic feature.","forced_intent":"authority","expected":"block"}
+{"id":"poison-narrative-number","kind":"poison","idea":"I volunteered to build product demos 2x faster while in support.","forced_intent":"authority","expected":"block"}
+{"id":"poison-near-miss","kind":"poison","idea":"I reduced routing time by 45%.","forced_intent":"authority","expected":"block"}
+{"id":"poison-laundering","kind":"poison","idea":"I resolved roughly half our tickets.","forced_intent":"authority","expected":"known_limitation"}
+{"id":"out-of-scope","kind":"fallback","idea":"book me a flight","expected":"fallback"}
+{"id":"ambiguous","kind":"escalate","idea":"thoughts","expected":"escalate"}

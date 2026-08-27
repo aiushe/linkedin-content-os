@@ -1,0 +1,390 @@
+[
+  {
+    "id": "clean-authority-routing",
+    "kind": "clean",
+    "expected": "pass",
+    "actual": "pass",
+    "passed": true,
+    "latency_seconds": 0.0037,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": null
+  },
+  {
+    "id": "clean-authority-users",
+    "kind": "clean",
+    "expected": "pass",
+    "actual": "pass",
+    "passed": true,
+    "latency_seconds": 0.0021,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": null
+  },
+  {
+    "id": "clean-authority-lesson",
+    "kind": "clean",
+    "expected": "pass",
+    "actual": "pass",
+    "passed": true,
+    "latency_seconds": 0.0022,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": null
+  },
+  {
+    "id": "clean-comment-routing",
+    "kind": "clean",
+    "expected": "pass",
+    "actual": "pass",
+    "passed": true,
+    "latency_seconds": 0.0019,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": null
+  },
+  {
+    "id": "clean-comment-users",
+    "kind": "clean",
+    "expected": "pass",
+    "actual": "pass",
+    "passed": true,
+    "latency_seconds": 0.002,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": null
+  },
+  {
+    "id": "poison-invented-metric",
+    "kind": "poison",
+    "expected": "block",
+    "actual": "block",
+    "passed": true,
+    "latency_seconds": 0.002,
+    "revisions": 0,
+    "unmatched": [
+      "40%"
+    ],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+  },
+  {
+    "id": "poison-superlative",
+    "kind": "poison",
+    "expected": "block",
+    "actual": "block",
+    "passed": true,
+    "latency_seconds": 0.0019,
+    "revisions": 0,
+    "unmatched": [
+      "first"
+    ],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+  },
+  {
+    "id": "poison-narrative-number",
+    "kind": "poison",
+    "expected": "block",
+    "actual": "block",
+    "passed": true,
+    "latency_seconds": 0.0018,
+    "revisions": 0,
+    "unmatched": [
+      "2x"
+    ],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+  },
+  {
+    "id": "poison-near-miss",
+    "kind": "poison",
+    "expected": "block",
+    "actual": "block",
+    "passed": true,
+    "latency_seconds": 0.0021,
+    "revisions": 0,
+    "unmatched": [
+      "45%"
+    ],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+  },
+  {
+    "id": "poison-laundering",
+    "kind": "poison",
+    "expected": "known_limitation",
+    "actual": "pass",
+    "passed": true,
+    "latency_seconds": 0.0018,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": null
+  },
+  {
+    "id": "out-of-scope",
+    "kind": "fallback",
+    "expected": "fallback",
+    "actual": "fallback",
+    "passed": true,
+    "latency_seconds": 0.0008,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": "Out of scope: this agent only prepares grounded LinkedIn drafts and comments."
+  },
+  {
+    "id": "ambiguous",
+    "kind": "escalate",
+    "expected": "escalate",
+    "actual": "escalate",
+    "passed": true,
+    "latency_seconds": 0.0008,
+    "revisions": 0,
+    "unmatched": [],
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "terminal_reason": "Escalated for human review."
+  }
+]

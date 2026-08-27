@@ -8,6 +8,10 @@ __pycache__/
 # Personal corpus: intentionally local-only. Never stage this directory.
 private/
 
+# The tracked fictional fixture corpus is safe for tests and must ship with the repo.
+!tests/fixtures/dev_corpus/private/
+!tests/fixtures/dev_corpus/private/**
+
 # Rebuildable market data and local indexes
 intel/raw/*
 intel/images/*

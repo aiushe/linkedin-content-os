@@ -2,12 +2,16 @@
 name = "linkedin-content-os"
 version = "0.1.0"
 description = "Human-gated LinkedIn content and job-search operating system"
-requires-python = ">=3.11"
+requires-python = ">=3.12,<3.13"
 dependencies = [
   "fastmcp>=2.0",
+  "langchain>=1.0",
+  "langchain-openai>=0.3",
+  "langgraph>=1.0",
   "numpy>=1.26",
   "python-dotenv>=1.0",
   "requests>=2.31",
+  "streamlit>=1.40",
 ]
 
 [project.optional-dependencies]
@@ -18,7 +22,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
