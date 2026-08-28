@@ -5,7 +5,7 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0037,
+    "latency_seconds": 0.0069,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [
@@ -39,7 +39,7 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0021,
+    "latency_seconds": 0.005,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [
@@ -73,7 +73,7 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0022,
+    "latency_seconds": 0.0049,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [
@@ -107,7 +107,7 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0019,
+    "latency_seconds": 0.0046,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [
@@ -141,7 +141,7 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.002,
+    "latency_seconds": 0.0044,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [
@@ -175,7 +175,7 @@
     "expected": "block",
     "actual": "block",
     "passed": true,
-    "latency_seconds": 0.002,
+    "latency_seconds": 0.0045,
     "revisions": 0,
     "unmatched": [
       "40%"
@@ -211,7 +211,7 @@
     "expected": "block",
     "actual": "block",
     "passed": true,
-    "latency_seconds": 0.0019,
+    "latency_seconds": 0.0044,
     "revisions": 0,
     "unmatched": [
       "first"
@@ -247,7 +247,7 @@
     "expected": "block",
     "actual": "block",
     "passed": true,
-    "latency_seconds": 0.0018,
+    "latency_seconds": 0.0046,
     "revisions": 0,
     "unmatched": [
       "2x"
@@ -283,7 +283,7 @@
     "expected": "block",
     "actual": "block",
     "passed": true,
-    "latency_seconds": 0.0021,
+    "latency_seconds": 0.0047,
     "revisions": 0,
     "unmatched": [
       "45%"
@@ -319,7 +319,7 @@
     "expected": "known_limitation",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0018,
+    "latency_seconds": 0.0045,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [
@@ -353,7 +353,7 @@
     "expected": "fallback",
     "actual": "fallback",
     "passed": true,
-    "latency_seconds": 0.0008,
+    "latency_seconds": 0.0012,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [
@@ -373,7 +373,7 @@
     "expected": "escalate",
     "actual": "escalate",
     "passed": true,
-    "latency_seconds": 0.0008,
+    "latency_seconds": 0.0011,
     "revisions": 0,
     "unmatched": [],
     "cost_events": [

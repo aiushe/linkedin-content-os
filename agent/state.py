@@ -27,6 +27,8 @@ class DraftState(TypedDict, total=False):
     template: dict | None
     grounding_degraded: bool
     degradation_reasons: Annotated[list[str], operator.add]
+    market_brief: dict | None
+    market_fetched: bool
 
     # Drafting
     draft: str

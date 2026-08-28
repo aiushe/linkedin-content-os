@@ -15,7 +15,8 @@ flowchart TD
     Router -->|authority / reach / comment| Ground[ground: read-only tools]
     Router -->|low confidence| Escalate[escalate]
     Router -->|out of scope| Fallback[fallback]
-    Ground --> Write[write]
+    Ground --> Intel[fixed market brief\nauthority / reach only]
+    Intel --> Write[write]
     Write --> Gate[deterministic voice + claims gate]
     Gate -->|pass| HITL{{human interrupt}}
     Gate -->|revise| Critique[computed-rubric critique]
@@ -40,6 +41,12 @@ The editable Mermaid source is [architecture.mmd](architecture.mmd).
   fewer than 1,500 words, or no features.
 - Market intel can degrade. Empty stories, an ungrounded claim, an indeterminate
   gate, or a revision-loop cap escalates instead of silently proceeding.
+- Live market search is unscored and runs once, after grounding, only for `authority`
+  and `reach`. It is cached for 12 hours and can shape length, structure, and angle;
+  it is never added to the factual allowlist or supplied as phrasing to the writer.
+- The market brief retains only scalar structure signals and five compressed hooks for
+  human review. Its full-post source text never enters writer context, and the claims
+  gate remains the final authority over every number and superlative.
 
 ## Failure policy
 

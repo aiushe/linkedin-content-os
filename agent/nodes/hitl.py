@@ -24,6 +24,14 @@ def _review_payload(state: DraftState) -> dict[str, Any]:
             for story in state.get("stories", [])
         ],
         "revision": state.get("revision", 0),
+        "market_brief": {
+            "available": state.get("market_brief", {}).get("available", False),
+            "topic": state.get("market_brief", {}).get("topic", ""),
+            "exemplars": state.get("market_brief", {}).get("exemplars", []),
+            "estimated_usd": state.get("market_brief", {}).get("estimated_usd", 0.0),
+        }
+        if isinstance(state.get("market_brief"), dict)
+        else {},
         "cost_events": state.get("cost_events", []),
         "actions": sorted(VALID_ACTIONS),
     }

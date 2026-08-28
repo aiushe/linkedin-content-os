@@ -4,7 +4,8 @@ flowchart TD
     router -->|out of scope| fallback[fallback]
     router -->|authority / reach / comment| ground[ground\nread-only ReAct tools]
     ground -->|empty stories| escalate
-    ground --> write[write\nfull model]
+    ground --> intel[fixed market brief\nauthority / reach only]
+    intel --> write[write\nfull model]
     write --> gate[deterministic gate\nvoice + claims]
     gate -->|pass| hitl{{Human review interrupt}}
     gate -->|revise| critique[critic\ntargeted fixes]

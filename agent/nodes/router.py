@@ -46,6 +46,7 @@ def intake_router(state: DraftState) -> dict:
     """Classify intent, skipping any model call when a user forced the intent."""
 
     meter = CostMeter(node="intake_router", model=config.MODEL_ROUTER)
+    errors: list[dict] = []
     forced = state.get("forced_intent")
     if forced:
         decision = IntentDecision(
@@ -78,9 +79,18 @@ def intake_router(state: DraftState) -> dict:
                 rationale=f"Router unavailable: {type(exc).__name__}.",
             )
             event = meter.event_or_zero(node="intake_router", model=config.MODEL_ROUTER)
+            errors = [
+                {
+                    "node": "intake_router",
+                    "class": "capability",
+                    "message": "Router model unavailable; routed to human escalation.",
+                    "detail": f"{type(exc).__name__}: {exc}"[:300],
+                }
+            ]
     return {
         "intent": decision.intent,
         "intent_confidence": decision.confidence,
         "router_rationale": decision.rationale,
         "cost_events": [event],
+        "errors": errors,
     }

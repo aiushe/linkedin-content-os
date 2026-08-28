@@ -118,7 +118,8 @@ def render(results: list[dict[str, Any]]) -> str:
 
 
 def main() -> None:
-    os.environ["AGENT_OFFLINE"] = "1"
+    # Default to the deterministic fixture suite, but allow AGENT_OFFLINE=0 for a live run.
+    os.environ.setdefault("AGENT_OFFLINE", "1")
     configure_fixture_corpus()
     from agent.graph import build_graph
 

@@ -2,10 +2,26 @@
   "mcpServers": {
     "linkedin-content-os": {
       "command": "uv",
-      "args": ["run", "python", "mcp/server.py"]
+      "args": [
+        "run",
+        "python",
+        "mcp/server.py"
+      ]
+    },
+    "apify-linkedin": {
+      "type": "http",
+      "url": "https://mcp.apify.com/?actors=harvestapi/linkedin-post-search,harvestapi/linkedin-profile-posts",
+      "headers": {
+        "Authorization": "Bearer ${APIFY_API_TOKEN}"
+      }
     }
   },
   "permissions": {
-    "allow": ["Read", "Edit", "Write", "Bash(uv run python pipeline/*)"]
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Bash(uv run python pipeline/*)"
+    ]
   }
 }

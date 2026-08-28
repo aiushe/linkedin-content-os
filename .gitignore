@@ -28,3 +28,6 @@ intel/market-vectors.npy
 !intel/images/.gitkeep
 !intel/posts/.gitkeep
 !intel/db/.gitkeep
+
+# Cached live intel searches (rebuildable, TTL-bounded)
+intel/cache/

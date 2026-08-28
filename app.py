@@ -58,6 +58,24 @@ def render(state: dict) -> None:
         if unmatched:
             st.error("Ungrounded spans: " + ", ".join(str(item.get("span")) for item in unmatched))
         st.json({"claims": report, "voice": state.get("voice_report", {})})
+    if isinstance(state.get("market_brief"), dict):
+        brief = state["market_brief"]
+        st.subheader("Market intelligence")
+        if brief.get("available"):
+            st.caption(
+                f"Unscored, {brief.get('window', 'week')} window · "
+                f"{brief.get('post_count', 0)} posts · "
+                f"${brief.get('estimated_usd', 0):.5f} estimated"
+            )
+            exemplars = brief.get("exemplars", [])
+            if exemplars:
+                st.write("Reference posts for human review")
+                for exemplar in exemplars:
+                    hook = exemplar.get("hook", "")
+                    url = exemplar.get("post_url")
+                    st.markdown(f"- [{hook}]({url})" if url else f"- {hook}")
+        elif brief.get("reason"):
+            st.caption(f"Market intelligence unavailable: {brief['reason']}")
     if state.get("cost_events"):
         st.subheader("Cost events")
         st.dataframe(state["cost_events"], use_container_width=True)

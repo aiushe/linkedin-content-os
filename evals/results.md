@@ -22,7 +22,7 @@ These are synthetic, offline regression results—not evidence about the persona
 - Fabrication catch rate: 4/5 (80%).
 - Voice-gate pass rate on clean cases: 5/5.
 - Mean revisions-to-pass: 0.00.
-- Latency: p50 0.0020s; p95 0.0022s.
+- Latency: p50 0.0046s; p95 0.0050s.
 - Cost by node: intake_router $0.00000, ground $0.00000, write $0.00000.
 
 ## Known limitation

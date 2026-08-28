@@ -7,6 +7,7 @@ import os
 from pydantic import BaseModel, Field
 
 from agent import config
+from agent.market_brief import render_prompt_block
 from agent.models import CostMeter, get_model
 from agent.state import DraftState
 from pipeline import voice
@@ -44,7 +45,7 @@ def _prompt(state: DraftState) -> str:
         for story in state.get("stories", [])
     ]
     revisions = state.get("critique", {}).get("targeted_fixes", [])
-    return (
+    prompt = (
         "Write a truthful LinkedIn draft and exactly five hook variants. "
         "You may state numbers or superlatives only when they occur verbatim in the verified "
         "allowlist. Do not invent facts. "
@@ -53,6 +54,8 @@ def _prompt(state: DraftState) -> str:
         f"Retrieved stories:\n{story_evidence}\n\nVoice rules:\n{rules}\n\n"
         f"Targeted fixes for this revision:\n{revisions}"
     )
+    market_context = render_prompt_block(state.get("market_brief"))
+    return prompt + (f"\n\n{market_context}" if market_context else "")
 
 
 def write(state: DraftState) -> dict:
@@ -70,8 +73,11 @@ def write(state: DraftState) -> dict:
             event = meter.event_or_zero(node="write", model=config.MODEL_WRITER)
             error = {
                 "node": "write",
-                "class": "degradable",
-                "message": "Writer model failed; an offline draft was produced for review.",
+                "class": "capability",
+                "message": (
+                    "Writer model unavailable; escalating instead of queueing "
+                    "a placeholder draft as if it were generated."
+                ),
                 "detail": type(exc).__name__,
             }
             errors = [error]

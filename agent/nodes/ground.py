@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from agent import config
 from agent.errors import AgentFailure, FailureClass
+from agent.market_brief import build as build_market_brief
+from agent.market_brief import should_fetch
 from agent.models import CostMeter, get_model
 from agent.state import DraftState
 from agent.tools import (
@@ -43,6 +46,43 @@ def _run_live_react(idea: str, meter: CostMeter) -> None:
     create_agent(
         get_model("router", callbacks=[meter]), get_read_tools(), system_prompt=system_prompt
     ).invoke({"messages": [{"role": "user", "content": idea}]})
+
+
+def _market_pillar(stories: list[dict[str, Any]]) -> str | None:
+    """Use retrieved story metadata only; market search receives no model-created query."""
+
+    for story in stories:
+        pillars = story.get("pillars", [])
+        if isinstance(pillars, list) and pillars:
+            return str(pillars[0])
+        if isinstance(pillars, str) and pillars:
+            return pillars
+    return None
+
+
+def _market_cost_events(brief: Any) -> list[dict[str, Any]]:
+    """Make the two bounded spend sources visible alongside model-node accounting."""
+
+    events = [
+        {
+            "node": "market_search",
+            "model": "apify:linkedin-post-search",
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "usd": brief.actor_estimated_usd,
+        }
+    ]
+    if brief.saturation_estimated_usd:
+        events.append(
+            {
+                "node": "market_brief",
+                "model": config.MODEL_INTEL,
+                "prompt_tokens": 400,
+                "completion_tokens": 80,
+                "usd": brief.saturation_estimated_usd,
+            }
+        )
+    return events
 
 
 def ground(state: DraftState) -> dict:
@@ -135,7 +175,7 @@ def ground(state: DraftState) -> dict:
             errors.append(failure.as_record(node="ground"))
         else:
             errors.append(failure.as_record(node="ground"))
-    return {
+    update = {
         "stories": stories,
         "allowlist": allowlist,
         "template": template,
@@ -144,3 +184,17 @@ def ground(state: DraftState) -> dict:
         "errors": errors,
         "cost_events": cost_events,
     }
+    # This is intentionally a fixed post-step, not a ReAct tool. One derived query can
+    # therefore yield at most one actor call in a run, and it is never revisited on edits.
+    if not state.get("market_fetched") and should_fetch(str(state.get("intent", ""))):
+        brief = build_market_brief(
+            state["idea"], str(state.get("intent", "")), _market_pillar(stories)
+        )
+        update["market_brief"] = asdict(brief)
+        update["market_fetched"] = True
+        update["cost_events"] = [*cost_events, *_market_cost_events(brief)]
+        if not brief.available:
+            update["grounding_degraded"] = True
+            if brief.reason:
+                update["degradation_reasons"] = [*reasons, brief.reason]
+    return update

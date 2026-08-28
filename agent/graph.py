@@ -69,6 +69,15 @@ def _route_after_ground(state: DraftState) -> Literal["write", "escalate"]:
     return "write"
 
 
+def _route_after_write(state: DraftState) -> Literal["gate", "escalate"]:
+    """A writer-model outage must escalate, never flow a placeholder into the gate."""
+
+    for error in state.get("errors", []):
+        if error.get("node") == "write" and error.get("class") == "capability":
+            return "escalate"
+    return "gate"
+
+
 def _route_after_gate(state: DraftState) -> Literal["hitl", "critique", "escalate"]:
     if state.get("gate_verdict") == "pass":
         return "hitl"
@@ -120,7 +129,9 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     workflow.add_conditional_edges(
         "ground", _route_after_ground, {"write": "write", "escalate": "escalate"}
     )
-    workflow.add_edge("write", "gate")
+    workflow.add_conditional_edges(
+        "write", _route_after_write, {"gate": "gate", "escalate": "escalate"}
+    )
     workflow.add_conditional_edges(
         "gate",
         _route_after_gate,
