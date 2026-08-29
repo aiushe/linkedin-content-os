@@ -12,7 +12,8 @@ hard-stops rather than being automatically rewritten.
 
 ```mermaid
 flowchart TD
-    Start --> Router[intake_router]
+    Start --> Memory[profile memory: optional, read-only]
+    Memory --> Router[intake_router]
     Router -->|authority / reach / comment| Ground[ground: read-only tools]
     Router -->|profile rewrite| Profile[profile focus gate]
     Router -->|outreach| Outreach[manual outreach guidance]
@@ -52,6 +53,17 @@ The editable Mermaid source is [architecture.mmd](architecture.mmd).
 - The market brief retains only scalar structure signals and five compressed hooks for
   human review. Its full-post source text never enters writer context, and the claims
   gate remains the final authority over every number and superlative.
+- Mem0 profile memory is a separate, optional external service. It receives only
+  facts a human explicitly enters and approves in the local app; it never reads or
+  ingests `private/`, a raw request, a draft, or a queue artifact. The graph sends
+  a fixed profile-context query, scopes retrieval to an opaque user ID, and treats
+  returned text as non-evidentiary framing only. It cannot enter the factual
+  allowlist or make a deterministic gate pass.
+- Mem0’s SDK telemetry is disabled by the application. If LangSmith tracing is
+  enabled, retrieved profile-memory text is withheld from model prompts unless
+  `MEM0_ALLOW_LANGSMITH_TRACING=true` is separately and explicitly configured.
+  A Mem0 outage degrades visibly; it does not bypass the gates or block retrieval
+  from the local evidence corpus.
 - `agent.skills` loads authored role playbooks from `.claude/skills/` at prompt construction
   time. They set process and structure, never evidence; they cannot widen the allowlist or
   override a gate.
@@ -82,6 +94,14 @@ LangChain and LangGraph send dashboard traces to LangSmith when `LANGSMITH_TRACI
 `LANGSMITH_API_KEY` are configured. Set `LANGSMITH_PROJECT` to isolate this application’s runs.
 Tracing exports prompts and outputs to that external service, so enable it only with explicit
 approval for the corpus-derived material that will be observed there.
+
+Mem0 Platform is configured with `MEM0_API_KEY`, `MEM0_ENABLED`, and an opaque
+`MEM0_USER_ID`. `MEM0_TIMEOUT_SECONDS` bounds a memory operation and
+`MEM0_TOP_K` caps the context returned to the writer. The app sets
+`MEM0_TELEMETRY=false` before loading the SDK so calls go only to the approved
+Mem0 project. Profile memory remains withheld from model prompts during LangSmith
+tracing unless `MEM0_ALLOW_LANGSMITH_TRACING=true`; that prevents the profile
+facts from appearing in dashboard prompt traces without a second approval.
 
 ## Model and market configuration
 

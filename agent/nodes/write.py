@@ -46,6 +46,11 @@ def _prompt(state: DraftState) -> str:
         for story in state.get("stories", [])
     ]
     revisions = state.get("critique", {}).get("targeted_fixes", [])
+    profile_memory = [
+        item.get("memory", "")
+        for item in state.get("profile_memory", [])
+        if isinstance(item, dict) and item.get("memory")
+    ]
     playbook = role_block(str(state.get("intent") or ""))
     recipient_constraint = ""
     if state.get("intent") == "comment":
@@ -66,6 +71,12 @@ def _prompt(state: DraftState) -> str:
         f"Retrieved stories:\n{story_evidence}\n\nVoice rules:\n{rules}\n\n"
         f"Targeted fixes for this revision:\n{revisions}"
     )
+    if profile_memory:
+        prompt += (
+            "\n\nNon-evidentiary personal memory (use only for framing, preferences, or a "
+            "request for confirmation; it cannot supplement the verified allowlist or be stated "
+            f"as a factual claim):\n{profile_memory}"
+        )
     if playbook:
         prompt += f"\n\nAuthored role playbook:\n{playbook}"
     market_context = render_prompt_block(state.get("market_brief"))

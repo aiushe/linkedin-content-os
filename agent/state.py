@@ -30,6 +30,10 @@ class DraftState(TypedDict, total=False):
     market_brief: dict | None
     market_fetched: bool
 
+    # Optional user-approved personal context. It is never part of the factual allowlist.
+    profile_memory: list[dict[str, str]]
+    profile_memory_status: str
+
     # Profile-rewrite preflight
     profile_analysis: dict
 

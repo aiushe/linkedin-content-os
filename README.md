@@ -17,6 +17,8 @@ Nothing is published, messaged, or written to `drafts/queue/` without an
   application was submitted; it never records an account or person automatically.
 - Uses Nebius Token Factory through its OpenAI-compatible API for live models.
 - Treats market intel as structural context, never as evidence for a factual claim.
+- Retrieves optional, user-approved Mem0 profile context at the start of a run without ingesting
+  the private corpus, drafts, or raw chat text.
 
 ## Quick start
 
@@ -37,6 +39,12 @@ Nothing is published, messaged, or written to `drafts/queue/` without an
 5. Optionally enable LangSmith dashboard traces with `LANGSMITH_TRACING=true`,
    `LANGSMITH_API_KEY`, and `LANGSMITH_PROJECT`. Traces export prompts and
    outputs to LangSmith, so enable them only with approval for that data flow.
+6. To enable persistent personal context, set `MEM0_API_KEY` and an opaque,
+   stable `MEM0_USER_ID`. Add only individually approved profile facts or writing
+   preferences in the app’s **Personal memory** panel. The graph retrieves them
+   with a static profile-context query; it never uploads `private/`, a raw idea,
+   or a draft to Mem0. If LangSmith tracing is on, memory is withheld from model
+   prompts until `MEM0_ALLOW_LANGSMITH_TRACING=true` is explicitly configured.
 
 ## Verify and run
 
@@ -57,3 +65,8 @@ All output is a review artifact. Only the human user publishes posts, makes
 comments, sends messages, or approves a queue write. See
 [architecture.md](docs/architecture.md) for the graph, failure policy, market
 intel boundary, and current configuration.
+
+Mem0 memory is optional and non-evidentiary. It can provide framing and writing
+preferences, but cannot create a factual claim or expand the deterministic
+allowlist. The sidebar supports explicit add, replace, list, and permanent-delete
+operations; no memory write is automatic.

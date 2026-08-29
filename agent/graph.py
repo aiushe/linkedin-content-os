@@ -18,6 +18,7 @@ from .nodes.escalate import escalate
 from .nodes.fallback import fallback
 from .nodes.ground import ground
 from .nodes.hitl import hitl
+from .nodes.memory import recall_profile_memory
 from .nodes.outreach import outreach
 from .nodes.profile_rewrite import profile_rewrite
 from .nodes.router import intake_router
@@ -119,6 +120,7 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     """Build a compiled graph with a memory checkpointer for resumable HITL runs."""
 
     workflow = StateGraph(DraftState)
+    workflow.add_node("profile_memory", recall_profile_memory)
     workflow.add_node("intake_router", intake_router)
     workflow.add_node("ground", ground)
     workflow.add_node("profile_rewrite", profile_rewrite)
@@ -130,7 +132,8 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     workflow.add_node("commit", commit)
     workflow.add_node("fallback", fallback)
     workflow.add_node("escalate", escalate)
-    workflow.add_edge(START, "intake_router")
+    workflow.add_edge(START, "profile_memory")
+    workflow.add_edge("profile_memory", "intake_router")
     workflow.add_conditional_edges(
         "intake_router",
         _route_after_router,

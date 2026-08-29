@@ -53,6 +53,38 @@ LLM_SEED = int(_llm_seed) if _llm_seed else None
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
 LLM_HARD_TIMEOUT_SECONDS = float(os.getenv("LLM_HARD_TIMEOUT_SECONDS", "240"))
 
+# --- Approved personal-memory boundary -----------------------------------
+# Mem0 is optional convenience context. It can guide framing and preferences, but it is never
+# factual evidence and must not make a claims gate pass. A static query avoids exporting the raw
+# draft idea to a second provider on every run.
+MEM0_API_KEY = os.getenv("MEM0_API_KEY") or None
+MEM0_ENABLED = os.getenv("MEM0_ENABLED", "true").lower() in {"1", "true", "yes"}
+MEM0_USER_ID = os.getenv("MEM0_USER_ID", "profile-memory")
+MEM0_TIMEOUT_SECONDS = float(os.getenv("MEM0_TIMEOUT_SECONDS", "8"))
+MEM0_TOP_K = int(os.getenv("MEM0_TOP_K", "6"))
+MEM0_ALLOW_LANGSMITH_TRACING = os.getenv("MEM0_ALLOW_LANGSMITH_TRACING", "").lower() in {
+    "1",
+    "true",
+    "yes",
+}
+
+
+def mem0_service_enabled() -> bool:
+    """Return whether approved Mem0 operations may contact the managed service."""
+
+    return bool(MEM0_API_KEY) and MEM0_ENABLED and os.getenv("AGENT_OFFLINE", "").lower() not in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
+def mem0_prompt_enabled() -> bool:
+    """Keep personal-memory text out of LangSmith traces unless separately approved."""
+
+    tracing = os.getenv("LANGSMITH_TRACING", "").lower() in {"1", "true", "yes"}
+    return mem0_service_enabled() and (not tracing or MEM0_ALLOW_LANGSMITH_TRACING)
+
 # --- Live market intel cost controls -------------------------------------
 # Timeliness can help both reach posts and story-grounded authority posts choose a
 # differentiated shape. It never contributes facts; comments stay excluded.

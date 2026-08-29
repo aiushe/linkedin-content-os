@@ -20,12 +20,18 @@ gate → human approval → commit. Choose one action before relying on them:
 - quarantine them outside `drafts/queue/`; or
 - recreate them through the graph after the profile-rewrite coverage gate passes.
 
-## 3. Decide memory scope before adding a memory layer
+## 3. Add approved personal memory
 
-Define which user-authored facts may persist across runs, where they are stored,
-and whether any content may leave the local machine for embeddings or retrieval.
-The existing `private/` corpus remains the source of truth; a memory layer must
-not invent facts, bypass the claim allowlist, or write account/person records.
+Mem0 Platform is wired as optional profile context. It stores only individual
+facts or writing preferences typed and approved in the app; it never ingests the
+private corpus, drafts, or raw requests. A stable opaque `MEM0_USER_ID` is
+configured locally; add the first approved fact in the **Personal memory** panel.
+Memory is not evidence and cannot widen the claim allowlist.
+
+If LangSmith tracing remains enabled, profile-memory text is withheld from model
+prompts until you explicitly set `MEM0_ALLOW_LANGSMITH_TRACING=true`. That second
+approval is required because the retrieved memory would otherwise appear in
+dashboard prompt traces.
 
 ## 4. Maintain the corpus safely
 

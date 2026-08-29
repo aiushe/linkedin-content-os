@@ -1,5 +1,6 @@
 flowchart TD
-    start([Start]) --> router[intake_router\nmini model / structured output]
+    start([Start]) --> memory[profile memory\noptional / read-only / non-evidentiary]
+    memory --> router[intake_router\nmini model / structured output]
     router -->|low confidence| escalate[escalate]
     router -->|out of scope| fallback[fallback]
     router -->|profile rewrite| profile[profile rewrite\ncoverage halt gate]
