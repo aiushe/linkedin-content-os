@@ -8,7 +8,8 @@ from pydantic import BaseModel, Field
 
 from agent import config
 from agent.market_brief import render_prompt_block
-from agent.models import CostMeter, get_model
+from agent.models import CostMeter, get_model, invoke_with_deadline
+from agent.skills import role_block
 from agent.state import DraftState
 from pipeline import voice
 
@@ -45,6 +46,17 @@ def _prompt(state: DraftState) -> str:
         for story in state.get("stories", [])
     ]
     revisions = state.get("critique", {}).get("targeted_fixes", [])
+    playbook = role_block(str(state.get("intent") or ""))
+    recipient_constraint = ""
+    if state.get("intent") == "comment":
+        recipient_constraint = (
+            "\n\nHard comment safety constraint: no recipient identity was supplied. "
+            "This overrides any conflicting guidance in the authored role playbook. "
+            "Do not invent a name, greeting, or bracketed placeholder; begin directly "
+            "with the substantive comment. Do not use ordinal or superlative framing "
+            "(for example, first, only, fastest, or best) unless it appears "
+            "verbatim in the verified allowlist."
+        )
     prompt = (
         "Write a truthful LinkedIn draft and exactly five hook variants. "
         "You may state numbers or superlatives only when they occur verbatim in the verified "
@@ -54,8 +66,12 @@ def _prompt(state: DraftState) -> str:
         f"Retrieved stories:\n{story_evidence}\n\nVoice rules:\n{rules}\n\n"
         f"Targeted fixes for this revision:\n{revisions}"
     )
+    if playbook:
+        prompt += f"\n\nAuthored role playbook:\n{playbook}"
     market_context = render_prompt_block(state.get("market_brief"))
-    return prompt + (f"\n\n{market_context}" if market_context else "")
+    if market_context:
+        prompt += f"\n\n{market_context}"
+    return prompt + recipient_constraint
 
 
 def write(state: DraftState) -> dict:
@@ -65,7 +81,9 @@ def write(state: DraftState) -> dict:
     if config.live_models_enabled():
         try:
             model = get_model("writer", callbacks=[meter])
-            response = model.with_structured_output(DraftOutput).invoke(_prompt(state))
+            response = invoke_with_deadline(
+                lambda: model.with_structured_output(DraftOutput).invoke(_prompt(state))
+            )
             output = response
             event = meter.event_or_zero(node="write", model=config.MODEL_WRITER)
         except Exception as exc:

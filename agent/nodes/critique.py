@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel
 
 from agent import config
-from agent.models import CostMeter, get_model
+from agent.models import CostMeter, get_model, invoke_with_deadline
+from agent.skills import role_block
 from agent.state import DraftState
 
 
 class CritiqueOutput(BaseModel):
-    verdict: str
+    # Literal, not str: open models honour hard schema constraints but freely invent
+    # values for a bare `str` that only carries a description.
+    verdict: Literal["pass", "revise", "block", "indeterminate"]
     reasons: list[str]
     targeted_fixes: list[str]
 
@@ -36,21 +41,28 @@ def _computed_critique(state: DraftState) -> CritiqueOutput:
     )
 
 
+def _prompt(state: DraftState) -> str:
+    """Critique against deterministic evidence plus the selected authored playbook."""
+
+    prompt = (
+        "Produce targeted fixes only from this computed gate report. "
+        "Do not invent a new rubric or claim the draft passed.\n\n"
+        + str({"voice": state.get("voice_report"), "claims": state.get("claims_report")})
+    )
+    playbook = role_block(str(state.get("intent") or ""))
+    return prompt + (f"\n\nAuthored role playbook:\n{playbook}" if playbook else "")
+
+
 def critique(state: DraftState) -> dict:
     """Turn deterministic gate findings into specific writer instructions."""
 
     meter = CostMeter(node="critique", model=config.MODEL_CRITIC)
     if config.live_models_enabled():
-        prompt = (
-            "Produce targeted fixes only from this computed gate report. "
-            "Do not invent a new rubric or claim the draft passed.\n\n"
-            + str({"voice": state.get("voice_report"), "claims": state.get("claims_report")})
-        )
         try:
-            output = (
-                get_model("critic", callbacks=[meter])
+            output = invoke_with_deadline(
+                lambda: get_model("critic", callbacks=[meter])
                 .with_structured_output(CritiqueOutput)
-                .invoke(prompt)
+                .invoke(_prompt(state))
             )
             event = meter.event_or_zero(node="critique", model=config.MODEL_CRITIC)
         except Exception:

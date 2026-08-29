@@ -21,8 +21,17 @@ except ImportError:  # pragma: no cover - direct script execution
 
 
 def run_actor(actor_id: str, actor_input: Dict[str, Any], token: str) -> Any:
-    endpoint = f"https://api.apify.com/v2/acts/{actor_id}/run-sync-get-dataset-items"
-    response = requests.post(endpoint, params={"token": token}, json=actor_input, timeout=300)
+    # REST routes on ``user~actor``; the store's ``user/actor`` form yields a 404.
+    # The token goes in a header, never a query param: a token in the URL is echoed by
+    # raise_for_status, leaking the secret into tracebacks, logs and shell scrollback.
+    path_id = actor_id.replace("/", "~")
+    endpoint = f"https://api.apify.com/v2/acts/{path_id}/run-sync-get-dataset-items"
+    response = requests.post(
+        endpoint,
+        headers={"Authorization": f"Bearer {token}"},
+        json=actor_input,
+        timeout=300,
+    )
     response.raise_for_status()
     return response.json()
 

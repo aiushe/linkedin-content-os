@@ -18,6 +18,8 @@ from .nodes.escalate import escalate
 from .nodes.fallback import fallback
 from .nodes.ground import ground
 from .nodes.hitl import hitl
+from .nodes.outreach import outreach
+from .nodes.profile_rewrite import profile_rewrite
 from .nodes.router import intake_router
 from .nodes.write import write
 from .state import DraftState
@@ -55,11 +57,17 @@ def deterministic_gate(state: DraftState) -> dict:
     return update
 
 
-def _route_after_router(state: DraftState) -> Literal["ground", "fallback", "escalate"]:
+def _route_after_router(
+    state: DraftState,
+) -> Literal["ground", "fallback", "profile_rewrite", "outreach", "escalate"]:
     if float(state.get("intent_confidence") or 0) < config.ROUTER_CONFIDENCE_FLOOR:
         return "escalate"
     if state.get("intent") == "out_of_scope":
         return "fallback"
+    if state.get("intent") == "profile_rewrite":
+        return "profile_rewrite"
+    if state.get("intent") == "outreach":
+        return "outreach"
     return "ground"
 
 
@@ -113,6 +121,8 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     workflow = StateGraph(DraftState)
     workflow.add_node("intake_router", intake_router)
     workflow.add_node("ground", ground)
+    workflow.add_node("profile_rewrite", profile_rewrite)
+    workflow.add_node("outreach", outreach)
     workflow.add_node("write", write)
     workflow.add_node("gate", deterministic_gate)
     workflow.add_node("critique", critique)
@@ -124,7 +134,13 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     workflow.add_conditional_edges(
         "intake_router",
         _route_after_router,
-        {"ground": "ground", "fallback": "fallback", "escalate": "escalate"},
+        {
+            "ground": "ground",
+            "fallback": "fallback",
+            "profile_rewrite": "profile_rewrite",
+            "outreach": "outreach",
+            "escalate": "escalate",
+        },
     )
     workflow.add_conditional_edges(
         "ground", _route_after_ground, {"write": "write", "escalate": "escalate"}
@@ -154,5 +170,7 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     )
     workflow.add_edge("commit", END)
     workflow.add_edge("fallback", END)
+    workflow.add_edge("profile_rewrite", END)
+    workflow.add_edge("outreach", END)
     workflow.add_edge("escalate", END)
     return workflow.compile(checkpointer=checkpointer or MemorySaver())

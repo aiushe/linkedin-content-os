@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from pipeline import voice
 
 from . import config, intel_mcp
-from .models import CostMeter
+from .models import CostMeter, invoke_with_deadline
 
 OPENING_MOVES = ("scene_or_claim", "question", "number")
 WORD_RE = re.compile(r"[a-z0-9][a-z0-9'-]*", re.IGNORECASE)
@@ -265,11 +265,9 @@ def saturation(hooks: list[str]) -> tuple[list[str], list[str]]:
         from langchain_openai import ChatOpenAI
 
         meter = CostMeter(node="market_brief", model=config.MODEL_INTEL)
-        output = (
-            ChatOpenAI(
-                model=config.MODEL_INTEL,
-                temperature=0,
-                callbacks=[meter],
+        output = invoke_with_deadline(
+            lambda: ChatOpenAI(
+                model=config.MODEL_INTEL, temperature=0, callbacks=[meter]
             )
             .with_structured_output(SaturationOutput)
             .invoke(prompt)

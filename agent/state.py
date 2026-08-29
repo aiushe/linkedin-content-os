@@ -5,7 +5,7 @@ from __future__ import annotations
 import operator
 from typing import Annotated, Literal, NotRequired, TypedDict
 
-Intent = Literal["authority", "reach", "comment", "out_of_scope"]
+Intent = Literal["authority", "reach", "comment", "profile_rewrite", "outreach", "out_of_scope"]
 Decision = Literal["approve", "edit", "reject", "retry", "escalate", "annotate"]
 GateVerdict = Literal["pass", "revise", "block", "indeterminate"]
 
@@ -29,6 +29,12 @@ class DraftState(TypedDict, total=False):
     degradation_reasons: Annotated[list[str], operator.add]
     market_brief: dict | None
     market_fetched: bool
+
+    # Profile-rewrite preflight
+    profile_analysis: dict
+
+    # Read-only outreach workflow
+    ops_guidance: dict
 
     # Drafting
     draft: str

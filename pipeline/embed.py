@@ -1,7 +1,12 @@
-"""Create small on-disk Voyage embedding indexes with content-hash reuse.
+"""Create small on-disk embedding indexes with content-hash reuse.
 
-The script never runs remotely unless invoked with `--allow-network` and a `VOYAGE_API_KEY`.
-It uses the REST API directly, keeping the project dependency-light.
+Text embeddings default to OpenAI (`text-embedding-3-small`), reusing the OPENAI_API_KEY
+this project already needs. Voyage remains selectable with `--provider voyage`.
+
+Image embeddings are Voyage-only: OpenAI publishes no multimodal embedding endpoint. That
+path is preserved rather than removed, and fails with a clear message if no Voyage key exists.
+
+Never runs remotely without `--allow-network`. Uses REST directly to stay dependency-light.
 """
 
 from __future__ import annotations
@@ -22,15 +27,40 @@ except ImportError:  # pragma: no cover - direct script execution
     from common import INTEL, ROOT, content_hash, load_all_posts, load_stories, write_json
 
 
-TEXT_ENDPOINT = "https://api.voyageai.com/v1/embeddings"
-MULTIMODAL_ENDPOINT = "https://api.voyageai.com/v1/multimodalembeddings"
+# Any OpenAI-compatible endpoint. EMBED_BASE_URL falls back to LLM_BASE_URL so a single
+# provider switch covers chat and embeddings together.
+_BASE = (os.getenv("EMBED_BASE_URL") or os.getenv("LLM_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
+OPENAI_TEXT_ENDPOINT = f"{_BASE}/embeddings"
+VOYAGE_TEXT_ENDPOINT = "https://api.voyageai.com/v1/embeddings"
+VOYAGE_MULTIMODAL_ENDPOINT = "https://api.voyageai.com/v1/multimodalembeddings"
+
+# voyage-3 / voyage-multimodal-3 are deprecated and excluded from Voyage's free tier.
+DEFAULT_TEXT_MODEL = {"openai": "text-embedding-3-small", "voyage": "voyage-3.5"}
+DEFAULT_MULTIMODAL_MODEL = "voyage-multimodal-3.5"
+KEY_ENV = {
+    "openai": os.getenv("EMBED_API_KEY_ENV") or os.getenv("LLM_API_KEY_ENV", "OPENAI_API_KEY"),
+    "voyage": "VOYAGE_API_KEY",
+}
 
 
-def voyage_text(inputs: List[str], api_key: str, model: str) -> List[List[float]]:
+def resolve_text_model(provider: str, text_model: str | None = None) -> str:
+    """Prefer an explicit CLI model, then the configured provider-specific override."""
+
+    return text_model or os.getenv("EMBED_MODEL_OVERRIDE") or DEFAULT_TEXT_MODEL[provider]
+
+
+def embed_text_batch(
+    inputs: List[str], api_key: str, model: str, provider: str = "openai"
+) -> List[List[float]]:
+    """Both providers accept {input, model} and return data[].embedding with an index."""
+
+    payload: Dict[str, Any] = {"input": inputs, "model": model}
+    if provider == "voyage":
+        payload["input_type"] = "document"
     response = requests.post(
-        TEXT_ENDPOINT,
+        VOYAGE_TEXT_ENDPOINT if provider == "voyage" else OPENAI_TEXT_ENDPOINT,
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"input": inputs, "model": model, "input_type": "document"},
+        json=payload,
         timeout=120,
     )
     response.raise_for_status()
@@ -42,7 +72,7 @@ def voyage_text(inputs: List[str], api_key: str, model: str) -> List[List[float]
 
 def voyage_multimodal(inputs: List[Dict[str, Any]], api_key: str, model: str) -> List[List[float]]:
     response = requests.post(
-        MULTIMODAL_ENDPOINT,
+        VOYAGE_MULTIMODAL_ENDPOINT,
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json={"inputs": inputs, "model": model, "input_type": "document"},
         timeout=180,
@@ -94,13 +124,15 @@ def save_index(
     write_json(metadata_path, {"model": model, "items": items})
 
 
-def embed_text(kind: str, api_key: str, model: str) -> int:
+def embed_text(kind: str, api_key: str, model: str, provider: str = "openai") -> int:
     items = text_items(kind)
     unique = [item for item in items if item["text"].strip()]
     vectors: List[List[float]] = []
     for start in range(0, len(unique), 128):
         batch = unique[start : start + 128]
-        vectors.extend(voyage_text([item["text"] for item in batch], api_key, model))
+        vectors.extend(
+            embed_text_batch([item["text"] for item in batch], api_key, model, provider)
+        )
     for item in unique:
         item["content_hash"] = content_hash(item["text"])
         item.pop("text", None)
@@ -134,19 +166,36 @@ def embed_images(api_key: str, model: str) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kind", choices=("stories", "market", "images"))
-    parser.add_argument("--text-model", default="voyage-3")
-    parser.add_argument("--multimodal-model", default="voyage-multimodal-3")
+    parser.add_argument(
+        "--provider",
+        choices=("openai", "voyage"),
+        default=os.getenv("EMBED_PROVIDER", "openai"),
+        help="Text embedding provider. Images are always Voyage.",
+    )
+    parser.add_argument("--text-model", default=None)
+    parser.add_argument("--multimodal-model", default=DEFAULT_MULTIMODAL_MODEL)
     parser.add_argument("--allow-network", action="store_true")
     args = parser.parse_args()
     if not args.allow_network:
         parser.error("Embedding has a usage cost. Re-run with --allow-network after review.")
-    api_key = os.getenv("VOYAGE_API_KEY")
+
+    provider = "voyage" if args.kind == "images" else args.provider
+    env_name = KEY_ENV[provider]
+    api_key = os.getenv(env_name)
     if not api_key:
-        parser.error("Set VOYAGE_API_KEY in .env/environment.")
+        hint = (
+            " Image embeddings are Voyage-only; OpenAI has no multimodal embedding endpoint."
+            if args.kind == "images"
+            else ""
+        )
+        parser.error(f"Set {env_name} in .env/environment.{hint}")
+
     count = (
         embed_images(api_key, args.multimodal_model)
         if args.kind == "images"
-        else embed_text(args.kind, api_key, args.text_model)
+        else embed_text(
+            args.kind, api_key, resolve_text_model(provider, args.text_model), provider
+        )
     )
     print(f"embedded {count} {args.kind}")
 

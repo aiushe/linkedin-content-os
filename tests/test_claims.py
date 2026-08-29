@@ -63,6 +63,20 @@ def test_superlative_is_blocked_without_exact_allowlist_match(synthetic_corpus):
     assert report.unmatched[0].span.lower() == "first"
 
 
+def test_enumerative_first_is_not_a_superlative_claim(synthetic_corpus):
+    report = claims.check("First, make the decision rules visible.", claims.load_allowlist())
+    assert report.verdict == "pass"
+    assert report.unmatched == []
+
+
+def test_temporal_at_first_is_not_a_superlative_claim(synthetic_corpus):
+    report = claims.check(
+        "What friction did not seem urgent at first?", claims.load_allowlist()
+    )
+    assert report.verdict == "pass"
+    assert report.unmatched == []
+
+
 def test_attribution_is_reported_but_not_made_up_as_a_numeric_block(synthetic_corpus):
     report = claims.check("Our data shows the workflow changed.", claims.load_allowlist())
     assert report.verdict == "pass"

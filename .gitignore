@@ -31,3 +31,9 @@ intel/market-vectors.npy
 
 # Cached live intel searches (rebuildable, TTL-bounded)
 intel/cache/
+
+# Local derived outputs. They can contain public-profile metadata or personal
+# performance data and are rebuilt locally rather than committed.
+intel/market-index.json
+ops/metrics/*.md
+tests/fixtures/dev_corpus/intel/cache/

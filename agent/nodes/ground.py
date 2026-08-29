@@ -9,7 +9,7 @@ from agent import config
 from agent.errors import AgentFailure, FailureClass
 from agent.market_brief import build as build_market_brief
 from agent.market_brief import should_fetch
-from agent.models import CostMeter, get_model
+from agent.models import CostMeter, get_model, invoke_with_deadline
 from agent.state import DraftState
 from agent.tools import (
     find_viral_posts_read,
@@ -43,9 +43,15 @@ def _run_live_react(idea: str, meter: CostMeter) -> None:
         "read tools. Do not draft a post, do not suggest unpublished facts, and do not call any "
         "write action. Retrieve evidence useful for the user's requested idea."
     )
-    create_agent(
-        get_model("router", callbacks=[meter]), get_read_tools(), system_prompt=system_prompt
-    ).invoke({"messages": [{"role": "user", "content": idea}]})
+    invoke_with_deadline(
+        lambda: create_agent(
+            get_model("router", callbacks=[meter]), get_read_tools(), system_prompt=system_prompt
+        ).invoke(
+            {"messages": [{"role": "user", "content": idea}]},
+            # Breakout condition: an unbounded ReAct loop is the runaway failure mode.
+            config={"recursion_limit": config.GROUND_RECURSION_LIMIT},
+        )
+    )
 
 
 def _market_pillar(stories: list[dict[str, Any]]) -> str | None:
@@ -92,7 +98,7 @@ def ground(state: DraftState) -> dict:
     errors: list[dict[str, str]] = []
     degraded = False
     meter = CostMeter(node="ground", model=config.MODEL_ROUTER)
-    if config.live_models_enabled():
+    if config.live_models_enabled() and config.GROUND_REACT_TRACE_ENABLED:
         try:
             _run_live_react(state["idea"], meter)
             cost_events = [meter.event_or_zero(node="ground", model=config.MODEL_ROUTER)]
@@ -109,7 +115,8 @@ def ground(state: DraftState) -> dict:
             )
             cost_events = [meter.event_or_zero(node="ground", model=config.MODEL_ROUTER)]
     else:
-        cost_events = [meter.record(node="ground", model="offline")]
+        model = "trace_disabled" if config.live_models_enabled() else "offline"
+        cost_events = [meter.record(node="ground", model=model)]
 
     try:
         stories = _hydrate_stories(retrying_story_search(state["idea"]))

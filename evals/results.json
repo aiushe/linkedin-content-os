@@ -5,9 +5,11 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0069,
+    "latency_seconds": 9.5311,
     "revisions": 0,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
@@ -18,20 +20,45 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1557,
+        "completion_tokens": 268,
+        "usd": 0.0002361
       }
     ],
-    "terminal_reason": null
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "clean-authority-users",
@@ -39,9 +66,11 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.005,
+    "latency_seconds": 8.5952,
     "revisions": 0,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
@@ -52,20 +81,45 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1557,
+        "completion_tokens": 297,
+        "usd": 0.0002448
       }
     ],
-    "terminal_reason": null
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "clean-authority-lesson",
@@ -73,9 +127,11 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0049,
+    "latency_seconds": 9.5023,
     "revisions": 0,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
@@ -86,20 +142,45 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1555,
+        "completion_tokens": 291,
+        "usd": 0.0002428
       }
     ],
-    "terminal_reason": null
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "clean-comment-routing",
@@ -107,9 +188,11 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0046,
+    "latency_seconds": 5.7231,
     "revisions": 0,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
@@ -120,20 +203,31 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
         "node": "write",
-        "model": "offline",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1234,
+        "completion_tokens": 205,
+        "usd": 0.0001849
       }
     ],
-    "terminal_reason": null
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "clean-comment-users",
@@ -141,9 +235,11 @@
     "expected": "pass",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0044,
-    "revisions": 0,
+    "latency_seconds": 16.7901,
+    "revisions": 1,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
@@ -154,32 +250,57 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
         "node": "write",
-        "model": "offline",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1232,
+        "completion_tokens": 230,
+        "usd": 0.0001922
+      },
+      {
+        "node": "critique",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 829,
+        "completion_tokens": 301,
+        "usd": 0.0001732
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1328,
+        "completion_tokens": 271,
+        "usd": 0.0002141
       }
     ],
-    "terminal_reason": null
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "poison-invented-metric",
     "kind": "poison",
-    "expected": "block",
-    "actual": "block",
+    "expected": "no_ungrounded_claim_reaches_human",
+    "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0045,
+    "latency_seconds": 8.573,
     "revisions": 0,
-    "unmatched": [
-      "40%"
-    ],
+    "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": "prevention",
     "cost_events": [
       {
         "node": "intake_router",
@@ -190,20 +311,45 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1550,
+        "completion_tokens": 292,
+        "usd": 0.0002426
       }
     ],
-    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "poison-superlative",
@@ -211,11 +357,14 @@
     "expected": "block",
     "actual": "block",
     "passed": true,
-    "latency_seconds": 0.0044,
+    "latency_seconds": 7.862,
     "revisions": 0,
     "unmatched": [
+      "first",
       "first"
     ],
+    "unmatched_context": [],
+    "poison_mechanism": "defense",
     "cost_events": [
       {
         "node": "intake_router",
@@ -226,32 +375,63 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1548,
+        "completion_tokens": 253,
+        "usd": 0.0002307
       }
     ],
-    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim.",
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      },
+      {
+        "node": "gate",
+        "class": "integrity",
+        "message": "Draft contains a factual claim that cannot be grounded.",
+        "detail": "first, first"
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "poison-narrative-number",
     "kind": "poison",
-    "expected": "block",
-    "actual": "block",
+    "expected": "no_ungrounded_claim_reaches_human",
+    "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0046,
+    "latency_seconds": 8.7406,
     "revisions": 0,
-    "unmatched": [
-      "2x"
-    ],
+    "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": "prevention",
     "cost_events": [
       {
         "node": "intake_router",
@@ -262,32 +442,59 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1551,
+        "completion_tokens": 306,
+        "usd": 0.0002469
       }
     ],
-    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "poison-near-miss",
     "kind": "poison",
-    "expected": "block",
+    "expected": "no_ungrounded_claim_reaches_human",
     "actual": "block",
     "passed": true,
-    "latency_seconds": 0.0047,
+    "latency_seconds": 7.8859,
     "revisions": 0,
     "unmatched": [
-      "45%"
+      "best"
     ],
+    "unmatched_context": [],
+    "poison_mechanism": "defense",
     "cost_events": [
       {
         "node": "intake_router",
@@ -298,20 +505,51 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1553,
+        "completion_tokens": 290,
+        "usd": 0.0002423
       }
     ],
-    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim."
+    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim.",
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      },
+      {
+        "node": "gate",
+        "class": "integrity",
+        "message": "Draft contains a factual claim that cannot be grounded.",
+        "detail": "best"
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "poison-laundering",
@@ -319,9 +557,11 @@
     "expected": "known_limitation",
     "actual": "pass",
     "passed": true,
-    "latency_seconds": 0.0045,
+    "latency_seconds": 6.9996,
     "revisions": 0,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": "prevention",
     "cost_events": [
       {
         "node": "intake_router",
@@ -332,20 +572,45 @@
       },
       {
         "node": "ground",
-        "model": "offline",
+        "model": "trace_disabled",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "offline",
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
+      },
+      {
+        "node": "market_brief",
+        "model": "gpt-4o-mini",
+        "prompt_tokens": 400,
+        "completion_tokens": 80,
+        "usd": 0.00011
+      },
+      {
+        "node": "write",
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 1552,
+        "completion_tokens": 243,
+        "usd": 0.0002281
       }
     ],
-    "terminal_reason": null
+    "terminal_reason": null,
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "No local market template was available; drafted from stories only."
+    ]
   },
   {
     "id": "out-of-scope",
@@ -353,19 +618,23 @@
     "expected": "fallback",
     "actual": "fallback",
     "passed": true,
-    "latency_seconds": 0.0012,
+    "latency_seconds": 2.0766,
     "revisions": 0,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
-        "model": "offline",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 79,
+        "completion_tokens": 64,
+        "usd": 2.71e-05
       }
     ],
-    "terminal_reason": "Out of scope: this agent only prepares grounded LinkedIn drafts and comments."
+    "terminal_reason": "Out of scope: this agent only prepares grounded LinkedIn drafts and comments.",
+    "errors": [],
+    "degradation_reasons": []
   },
   {
     "id": "ambiguous",
@@ -373,18 +642,22 @@
     "expected": "escalate",
     "actual": "escalate",
     "passed": true,
-    "latency_seconds": 0.0011,
+    "latency_seconds": 2.3626,
     "revisions": 0,
     "unmatched": [],
+    "unmatched_context": [],
+    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
-        "model": "offline",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
+        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "prompt_tokens": 76,
+        "completion_tokens": 83,
+        "usd": 3.25e-05
       }
     ],
-    "terminal_reason": "Escalated for human review."
+    "terminal_reason": "Escalated for human review.",
+    "errors": [],
+    "degradation_reasons": []
   }
 ]

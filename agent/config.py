@@ -23,9 +23,35 @@ VOICE_MIN_WORDS = int(os.getenv("VOICE_MIN_WORDS", "1500"))
 MAX_REVISIONS = int(os.getenv("MAX_REVISIONS", "3"))
 CLAIM_REQUIRE_EXACT = True
 
+# Any OpenAI-compatible endpoint works here: OpenAI (default), Nebius Token Factory,
+# Fireworks, or a local server. Only the base URL and key env var change.
+LLM_BASE_URL = os.getenv("LLM_BASE_URL") or None
+LLM_API_KEY_ENV = os.getenv("LLM_API_KEY_ENV", "OPENAI_API_KEY")
+
+
+def llm_api_key() -> str | None:
+    """Key for the configured endpoint.
+
+    Only falls back to OPENAI_API_KEY when no distinct key env was configured. Sending an
+    OpenAI key to a third-party base_url would fail confusingly rather than obviously.
+    """
+
+    key = os.getenv(LLM_API_KEY_ENV)
+    if key:
+        return key
+    return os.getenv("OPENAI_API_KEY") if LLM_API_KEY_ENV == "OPENAI_API_KEY" else None
+
+
 MODEL_ROUTER = os.getenv("MODEL_ROUTER", "gpt-4o-mini")
 MODEL_WRITER = os.getenv("MODEL_WRITER", "gpt-4.1")
 MODEL_CRITIC = os.getenv("MODEL_CRITIC", "gpt-4o-mini")
+WRITER_TEMPERATURE = float(os.getenv("WRITER_TEMPERATURE", "0"))
+_llm_seed = os.getenv("LLM_SEED", "").strip()
+LLM_SEED = int(_llm_seed) if _llm_seed else None
+# Bound each provider request. A timeout escalates the run; it must never leave a paid
+# inference request waiting indefinitely.
+LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
+LLM_HARD_TIMEOUT_SECONDS = float(os.getenv("LLM_HARD_TIMEOUT_SECONDS", "240"))
 
 # --- Live market intel cost controls -------------------------------------
 # Timeliness can help both reach posts and story-grounded authority posts choose a
@@ -44,6 +70,16 @@ MODEL_INTEL = os.getenv("MODEL_INTEL", "gpt-4o-mini")
 # Conservative estimate for one bounded 400-token-in / 80-token-out mini call.
 INTEL_SATURATION_ESTIMATED_USD = float(os.getenv("INTEL_SATURATION_ESTIMATED_USD", "0.00011"))
 
+# Hard bounds on the two calls that can block forever. An unbounded network wait does
+# not raise, so `except Exception` never fires and the graph hangs instead of degrading.
+INTEL_TIMEOUT_SECONDS = float(os.getenv("INTEL_TIMEOUT_SECONDS", "25"))
+GROUND_RECURSION_LIMIT = int(os.getenv("GROUND_RECURSION_LIMIT", "12"))
+GROUND_REACT_TRACE_ENABLED = os.getenv("GROUND_REACT_TRACE_ENABLED", "").lower() in {
+    "1",
+    "true",
+    "yes",
+}
+
 RETRY_MAX = int(os.getenv("RETRY_MAX", "2"))
 RETRY_BASE_DELAY = float(os.getenv("RETRY_BASE_DELAY", "1.5"))
 
@@ -55,7 +91,7 @@ def live_models_enabled() -> bool:
     soon as an OpenAI key is present, unless the user explicitly sets AGENT_OFFLINE.
     """
 
-    return bool(os.getenv("OPENAI_API_KEY")) and os.getenv("AGENT_OFFLINE", "").lower() not in {
+    return bool(llm_api_key()) and os.getenv("AGENT_OFFLINE", "").lower() not in {
         "1",
         "true",
         "yes",

@@ -14,6 +14,13 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
+
+try:  # Every pipeline CLI imports this module, so .env reaches all of them from one place.
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env", override=False)
+except Exception:  # pragma: no cover - dotenv is optional at runtime
+    pass
 CORPUS = ROOT / "corpus"
 INTEL = ROOT / "intel"
 PRIVATE = ROOT / "private"

@@ -7,12 +7,14 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from agent import config
-from agent.models import CostMeter, get_model
+from agent.models import CostMeter, get_model, invoke_with_deadline
 from agent.state import DraftState
 
 
 class IntentDecision(BaseModel):
-    intent: Literal["authority", "reach", "comment", "out_of_scope"]
+    intent: Literal[
+        "authority", "reach", "comment", "profile_rewrite", "outreach", "out_of_scope"
+    ]
     confidence: float = Field(ge=0, le=1)
     rationale: str
 
@@ -32,6 +34,21 @@ def _offline_route(idea: str) -> IntentDecision:
     if any(word in text for word in ("comment", "reply", "respond to this post")):
         return IntentDecision(
             intent="comment", confidence=0.9, rationale="The request is a reply/comment."
+        )
+    if any(word in text for word in ("profile rewrite", "rewrite my profile", "linkedin profile")):
+        return IntentDecision(
+            intent="profile_rewrite",
+            confidence=0.95,
+            rationale="The request is a LinkedIn profile rewrite.",
+        )
+    if any(
+        phrase in text
+        for phrase in ("outreach", "target map", "hiring manager", "connection request", "applied")
+    ):
+        return IntentDecision(
+            intent="outreach",
+            confidence=0.9,
+            rationale="The request is for the manual outreach workflow.",
         )
     if any(word in text for word in ("reach", "broad", "how-to", "framework")):
         return IntentDecision(
@@ -64,12 +81,16 @@ def intake_router(state: DraftState) -> dict:
         prompt = (
             "Classify this request for a human-gated LinkedIn content agent. Choose authority for "
             "first-person experience, reach for broad educational content, comment for a reply to "
-            "someone else's post, or out_of_scope. Return low confidence when ambiguous.\n\n"
+            "someone else's post, profile_rewrite for a LinkedIn profile rewrite, outreach for "
+            "manual post-application target mapping or comments, or out_of_scope. Return low "
+            "confidence when ambiguous.\n\n"
             f"Request: {state['idea']}"
         )
         try:
             model = get_model("router", callbacks=[meter])
-            response = model.with_structured_output(IntentDecision).invoke(prompt)
+            response = invoke_with_deadline(
+                lambda: model.with_structured_output(IntentDecision).invoke(prompt)
+            )
             decision = response
             event = meter.event_or_zero(node="intake_router", model=config.MODEL_ROUTER)
         except Exception as exc:  # model access should not turn into an unsafe route

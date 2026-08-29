@@ -10,7 +10,7 @@
     },
     "apify-linkedin": {
       "type": "http",
-      "url": "https://mcp.apify.com/?actors=harvestapi/linkedin-post-search,harvestapi/linkedin-profile-posts",
+      "url": "https://mcp.apify.com/?actors=harvestapi/linkedin-post-search,harvestapi/linkedin-profile-posts,harvestapi/linkedin-profile-scraper",
       "headers": {
         "Authorization": "Bearer ${APIFY_API_TOKEN}"
       }

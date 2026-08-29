@@ -1,4 +1,13 @@
-# LinkedIn Content OS — Build Plan
+# LinkedIn Content OS — Historical Build Plan
+
+> **Status: implemented and superseded as an execution plan (2026-08-28).**
+> This file preserves the original design rationale and phased plan. It is not
+> the current architecture or operational guide. The implemented system uses
+> an ignored `private/` corpus, Nebius Token Factory, LangGraph, deterministic
+> voice and claim gates, market-template retrieval, authored skill injection,
+> profile-rewrite coverage halting, read-only outreach guidance, and a required
+> human interrupt before a queue write. See `docs/architecture.md` for the
+> current system, `README.md` for setup, and `NEXT_INPUTS.md` for open decisions.
 
 A personal content + job-search operating system, modeled on the system described in
 `transcript.txt` (Basha Kubitzka on Akash's podcast), rebuilt as a proper engineering

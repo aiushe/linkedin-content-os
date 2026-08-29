@@ -153,6 +153,14 @@ async def _fetch(query: str, posted_limit: str, max_posts: int) -> list[dict[str
     return raw if isinstance(raw, list) else [raw]
 
 
+async def _bounded_fetch(query: str, posted_limit: str, max_posts: int) -> list[dict[str, Any]]:
+    """Create the network coroutine only when the bounded runner actually starts it."""
+
+    return await asyncio.wait_for(
+        _fetch(query, posted_limit, max_posts), timeout=config.INTEL_TIMEOUT_SECONDS
+    )
+
+
 def _normalize(records: list[Any]) -> list[dict[str, Any]]:
     posts = []
     for record in records:
@@ -203,9 +211,14 @@ def search_trending_posts(
             return hit
     if not ok:
         return _unavailable(reason)
-    fetch = _fetch(query, posted_limit, max_posts)
+    fetch = _bounded_fetch(query, posted_limit, max_posts)
     try:
         records = asyncio.run(fetch)
+    except (TimeoutError, asyncio.TimeoutError):
+        fetch.close()
+        return _unavailable(
+            f"Live intel timed out after {config.INTEL_TIMEOUT_SECONDS:g}s; continuing without it."
+        )
     except Exception as exc:  # network, auth, rate limit, actor failure
         # A monkeypatched event-loop seam can fail before consuming the coroutine.
         # Closing it avoids a noisy unawaited-coroutine warning in that degradable path.

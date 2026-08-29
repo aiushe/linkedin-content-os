@@ -1,44 +1,41 @@
-# What I need from you next
+# Current decisions and inputs
 
-The reusable system is built. Do these in order; none require sharing credentials in chat.
+The initial corpus, voice fingerprint, target JDs, creator watchlist, market
+templates, and self-performance report are already seeded. The next decisions
+are operational; do not add personal material unless you choose to do so.
 
-## 1. Pick the target (required before profile work)
+## 1. Improve x-factor coverage
 
-- Target role and niche: **domain, product type, superpower, company stage**.
-- Whether you are actively job searching or building presence while employed.
-- Realistic posting days and weekly time budget.
-- A virality threshold appropriate to your niche (the default is 750 likes).
+The last batch produced 225 posts with no non-null x-factors. The calculation
+requires at least ten recent self-excluded posts from the same author. Choose a
+higher `maxPosts` value for the watchlist and rerun the batch market pipeline if
+author-level baselines are needed.
 
-## 2. Seed the truth corpus (required before any factual drafting)
+## 2. Handle pre-graph profile drafts
 
-- Paste your complete live profile into `private/profile/current.md`.
-- Add your current/long-form résumé.
-- Add five target JDs for the *same* role family to `private/targets/jds/`.
-- Fill `private/identity/truth-table.md` with every claim/metric, supporting proof, and date.
-- Book a 90-minute story-bank interview. We will turn your answers into 15–25 files from
-  `corpus/stories/_TEMPLATE.md`; imperfect or unverified metrics are fine when marked as such.
+Two existing queue drafts were not produced through router → ground → write →
+gate → human approval → commit. Choose one action before relying on them:
 
-## 3. Capture your voice (required before relying on draft automation)
+- delete them;
+- quarantine them outside `drafts/queue/`; or
+- recreate them through the graph after the profile-rewrite coverage gate passes.
 
-- Add at least ~5,000 words of real writing to `private/identity/voice/samples/` (10,000 is
-  ideal): thoughtful emails, docs, post-mortems, Slack/Discord, or voice-note transcripts.
-- Mark 3–5 pieces you love in `private/identity/voice/exemplars/`.
-- Add rejected AI writing in `private/identity/voice/negative/`, with a one-line note on why it
-  fails your voice.
-- Then run `uv run python pipeline/voice.py fingerprint`.
+## 3. Decide memory scope before adding a memory layer
 
-## 4. Add market intelligence only when ready (optional at first)
+Define which user-authored facts may persist across runs, where they are stored,
+and whether any content may leave the local machine for embeddings or retrieval.
+The existing `private/` corpus remains the source of truth; a memory layer must
+not invent facts, bypass the claim allowlist, or write account/person records.
 
-- Create `.env` from `.env.example`; keep `APIFY_API_TOKEN` and `VOYAGE_API_KEY` there, never
-  in git or chat.
-- Use Apify MCP to inspect a public-post actor’s schema, price, and proxy/session behavior;
-  choose an actor only after review. Do not provide your LinkedIn session cookie.
-- Add a 20–40 person public creator watchlist based on your pillars. Start with one creator,
-  save the actor result into `intel/raw/`, normalize it, then compute x-factors.
-- Add Voyage only once the story bank/intel has grown enough that metadata filtering is no
-  longer convenient.
+## 4. Maintain the corpus safely
 
-## First reply to send me
+When you have a new verified story, metric, or voice sample, add it yourself to
+the ignored `private/` corpus, rebuild the relevant index/fingerprint, and
+rerun the verification suite. Do not place credentials or personal corpus files
+in git.
 
-Send the four-axis target role plus whether you are job hunting now. I’ll then start the
-one-question-at-a-time story-bank interview and help seed the corpus.
+## 5. Security follow-up
+
+Rotate any credential that was ever exposed in a traceback, terminal scrollback,
+or tracked file. Removing a value from the working tree cannot revoke an
+already-exposed key.

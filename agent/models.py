@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import os
+import signal
+import threading
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Callable, Generator, Literal, TypeVar
 
 from langchain_core.callbacks import BaseCallbackHandler
 
@@ -22,13 +27,81 @@ MODEL_PRICES: dict[str, tuple[float, float]] = {
     "gpt-4.1": (2.00, 8.00),
 }
 
+# Extra rates without editing code, e.g.
+#   MODEL_PRICES_JSON='{"Qwen/Qwen3-32B": [0.10, 0.30]}'
+for _name, _rate in json.loads(os.getenv("MODEL_PRICES_JSON", "{}")).items():
+    MODEL_PRICES[_name] = (float(_rate[0]), float(_rate[1]))
+
+UNKNOWN_PRICE = "unpriced"
+T = TypeVar("T")
+
+
+class ModelDeadlineExceeded(TimeoutError):
+    """Raised when a live provider call exceeds the process-enforced deadline."""
+
+
+@contextmanager
+def model_deadline() -> Generator[None, None, None]:
+    """Enforce a real deadline when the OpenAI-compatible client ignores its timeout.
+
+    POSIX signals can interrupt a blocking SSL read in the main thread. Other threads retain the
+    client timeout, because Python only permits installing this signal handler in the main thread.
+    """
+
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+
+    def expire(_signum: int, _frame: Any) -> None:
+        raise ModelDeadlineExceeded(
+            f"Model request exceeded {config.LLM_HARD_TIMEOUT_SECONDS:g} seconds."
+        )
+
+    previous = signal.signal(signal.SIGALRM, expire)
+    signal.setitimer(signal.ITIMER_REAL, config.LLM_HARD_TIMEOUT_SECONDS)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
+
+
+def invoke_with_deadline(operation: Callable[[], T]) -> T:
+    with model_deadline():
+        return operation()
+
+
+def price_for(model: str) -> tuple[float, float] | None:
+    """None means the model has no known rate. Token counts stay accurate either way.
+
+    Reporting an unpriced model as $0.00 would make a cost table quietly dishonest.
+    """
+
+    return MODEL_PRICES.get(model)
+
 
 def get_model(role: ModelRole, *, callbacks: list[Any] | None = None) -> Any:
     """Return the configured ChatOpenAI model for a graph role."""
 
     from langchain_openai import ChatOpenAI
 
-    return ChatOpenAI(model=MODEL_BY_ROLE[role], temperature=0.2, callbacks=callbacks or [])
+    options: dict[str, Any] = {
+        "model": MODEL_BY_ROLE[role],
+        "temperature": config.WRITER_TEMPERATURE if role == "writer" else 0.2,
+        "callbacks": callbacks or [],
+        "timeout": config.LLM_TIMEOUT_SECONDS,
+        # A request timeout must remain a real upper bound. Retrying a stalled request
+        # inside the provider client would multiply that bound before the graph can escalate.
+        "max_retries": 0,
+    }
+    if config.LLM_BASE_URL:
+        options["base_url"] = config.LLM_BASE_URL
+    if config.LLM_SEED is not None:
+        options["seed"] = config.LLM_SEED
+    key = config.llm_api_key()
+    if key:
+        options["api_key"] = key
+    return ChatOpenAI(**options)
 
 
 def _usage_from(response: Any) -> dict[str, int]:

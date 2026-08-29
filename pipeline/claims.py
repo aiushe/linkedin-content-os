@@ -241,6 +241,17 @@ def extract_claims(draft_body: str) -> list[Claim]:
                     span = match.group(0)
                     if kind == "numeric" and _is_year(span):
                         continue
+                    if (
+                        kind == "superlative"
+                        and span.lower() == "first"
+                        and (
+                            re.match(r"^\s*first\s*[,;:]", sentence, re.IGNORECASE)
+                            or re.search(r"\bat\s+$", sentence[: match.start()], re.IGNORECASE)
+                        )
+                    ):
+                        # "First, ..." and "at first" are discourse or temporal markers,
+                        # not priority claims.
+                        continue
                     key = (line_no, match.start(), kind)
                     if key not in seen:
                         claims.append(Claim(sentence, span, kind, line_no))

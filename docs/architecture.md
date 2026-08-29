@@ -3,7 +3,8 @@
 ## One-liner
 
 This agent turns a rough LinkedIn idea into a voice-matched, evidence-grounded
-draft in a local Streamlit app. It retrieves, drafts, and critiques on its own,
+draft in a local Streamlit app. Nebius Token Factory supplies optional live models
+through its OpenAI-compatible API. It retrieves, drafts, and critiques on its own,
 but cannot queue a file until a human explicitly approves it. An ungrounded claim
 hard-stops rather than being automatically rewritten.
 
@@ -13,6 +14,8 @@ hard-stops rather than being automatically rewritten.
 flowchart TD
     Start --> Router[intake_router]
     Router -->|authority / reach / comment| Ground[ground: read-only tools]
+    Router -->|profile rewrite| Profile[profile focus gate]
+    Router -->|outreach| Outreach[manual outreach guidance]
     Router -->|low confidence| Escalate[escalate]
     Router -->|out of scope| Fallback[fallback]
     Ground --> Intel[fixed market brief\nauthority / reach only]
@@ -25,6 +28,8 @@ flowchart TD
     HITL -->|approve| Commit[commit to drafts/queue only]
     HITL -->|edit| Gate
     HITL -->|retry| Write
+    Profile --> End
+    Outreach --> End
 ```
 
 The editable Mermaid source is [architecture.mmd](architecture.mmd).
@@ -47,6 +52,15 @@ The editable Mermaid source is [architecture.mmd](architecture.mmd).
 - The market brief retains only scalar structure signals and five compressed hooks for
   human review. Its full-post source text never enters writer context, and the claims
   gate remains the final authority over every number and superlative.
+- `agent.skills` loads authored role playbooks from `.claude/skills/` at prompt construction
+  time. They set process and structure, never evidence; they cannot widen the allowlist or
+  override a gate.
+- A profile-rewrite request first mines five or more JDs. If the percentage of significant terms
+  appearing in four or more JDs is below 0.75, the graph names the role clusters and stops before
+  drafting profile copy.
+- Outreach is read-only guidance over `ops/outreach-log.md` and
+  `ops/engagement-queue.md`. It requires an application first and never searches people, sends a
+  message, schedules engagement, or writes an account/person record.
 
 ## Failure policy
 
@@ -58,6 +72,37 @@ The editable Mermaid source is [architecture.mmd](architecture.mmd).
 | `INTEGRITY` | Hard-stop and expose the ungrounded span. |
 | `LOOP` | Escalate after three writer revisions with full history retained. |
 
+Live model calls use a single bounded request (`LLM_TIMEOUT_SECONDS`, default 180 seconds) with
+no client-side retries. A provider stall becomes a capability escalation, rather than an
+unbounded paid request. This is deliberately separate from the 25-second optional market-intel
+timeout. The observational grounding ReAct trace is off by default because deterministic retrieval
+does not consume its output; enable it only when diagnosing tool behavior.
+
+LangChain and LangGraph send dashboard traces to LangSmith when `LANGSMITH_TRACING=true` and a
+`LANGSMITH_API_KEY` are configured. Set `LANGSMITH_PROJECT` to isolate this application’s runs.
+Tracing exports prompts and outputs to that external service, so enable it only with explicit
+approval for the corpus-derived material that will be observed there.
+
+## Model and market configuration
+
+The default test path is offline. For Nebius Token Factory, configure a local `.env` with an
+OpenAI-compatible base URL, the environment-variable name containing the Nebius key, and selected
+router/writer/critic model IDs. Text embeddings use the same endpoint and key; set
+`EMBED_MODEL_OVERRIDE` to an enabled embedding model. Do not place credentials in tracked files.
+Set `LLM_SEED` only after confirming that the selected provider accepts the OpenAI-compatible
+`seed` parameter; it is forwarded unchanged to model requests and does not replace the gates.
+
+Market intel has two distinct paths:
+
+1. The batch watchlist pull writes local raw and normalized post records, then calculates an
+   x-factor only when an author has at least ten self-excluded recent posts.
+2. The in-graph live search is unscored, optional, cached, and restricted to authority/reach
+   intent. It can shape an angle but is never evidence for a factual claim.
+
+Build market templates after a batch pull with `pipeline/embed.py market --allow-network` and
+`pipeline/cluster.py text`. Missing templates degrade grounding explicitly; they never bypass the
+claims or voice gate.
+
 ## Operating the project
 
 ```bash
@@ -67,8 +112,12 @@ uv run python evals/run.py
 uv run streamlit run app.py
 ```
 
-The eval run uses only `tests/fixtures/dev_corpus/`. Before a real run, populate
-the ignored `private/` corpus exactly as described in Week 3 Phase K, then run
+The eval run uses only `tests/fixtures/dev_corpus/`. Poison cases report three distinct safe
+outcomes: prevention (the writer omitted the poisoned premise), defense (the deterministic gate
+blocked an emitted claim), and containment (the run escalated before approval). The metric never
+rewards weakening a gate to force a block.
+
+Before a real run, populate the ignored `private/` corpus, then run
 `uv run python pipeline/voice.py fingerprint` and repeat the evals.
 
 ## Demo run sheet
