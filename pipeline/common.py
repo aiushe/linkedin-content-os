@@ -191,6 +191,9 @@ def canonical_post(raw: Dict[str, Any], scraped_at: str | None = None) -> Dict[s
     url = str(first_present(raw, "url", "postUrl", "linkedinUrl", default=""))
     raw_id = first_present(raw, "id", "urn", "postId", "activityUrn", default=None)
     identifier = str(raw_id or url or content_hash(f"{author_handle}|{text}"))
+    posted_value = first_present(raw, "posted_at", "postedAt", "createdAt", "date", "timestamp")
+    if isinstance(posted_value, dict):
+        posted_value = first_present(posted_value, "timestamp", "date")
     return {
         "id": identifier if identifier.startswith("linkedin:") else f"linkedin:{identifier}",
         "platform": "linkedin",
@@ -198,9 +201,7 @@ def canonical_post(raw: Dict[str, Any], scraped_at: str | None = None) -> Dict[s
         "author_name": author_name,
         "author_info": str(first_present(author, "headline", "description", default="")),
         "url": url,
-        "posted_at": iso_datetime(
-            first_present(raw, "posted_at", "postedAt", "createdAt", "date", "timestamp")
-        ),
+        "posted_at": iso_datetime(posted_value),
         "scraped_at": scraped_at or utc_now(),
         "text": text,
         "hook": first_lines(text),

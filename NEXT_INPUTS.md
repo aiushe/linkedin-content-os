@@ -6,10 +6,10 @@ are operational; do not add personal material unless you choose to do so.
 
 ## 1. Improve x-factor coverage
 
-The last batch produced 225 posts with no non-null x-factors. The calculation
-requires at least ten recent self-excluded posts from the same author. Choose a
-higher `maxPosts` value for the watchlist and rerun the batch market pipeline if
-author-level baselines are needed.
+After repairing timestamp normalization, the existing 225-post batch produces
+82 non-null x-factors. The calculation requires at least ten recent
+self-excluded posts from the same author. Keep the current `maxPosts` setting;
+increase it only if a future pull needs deeper author-level history.
 
 ## 2. Handle pre-graph profile drafts
 

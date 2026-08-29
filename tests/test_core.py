@@ -25,6 +25,18 @@ def test_normalization_maps_common_actor_shape():
     assert post["author_handle"] == "ada"
 
 
+def test_normalization_maps_nested_actor_timestamp():
+    post = canonical_post(
+        {
+            "id": "nested-date",
+            "content": "A grounded post.",
+            "postedAt": {"timestamp": 1_785_456_000, "date": "2026-08-01"},
+        }
+    )
+
+    assert post["posted_at"] == "2026-07-31T00:00:00Z"
+
+
 def test_xfactor_excludes_current_post_and_requires_sample():
     current = datetime(2026, 2, 1, tzinfo=timezone.utc)
     posts = []
