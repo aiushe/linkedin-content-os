@@ -12,6 +12,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -155,6 +156,35 @@ def numeric(value: Any) -> int:
     return 0
 
 
+def profile_handle_from_url(value: Any) -> str:
+    """Extract a LinkedIn profile or company handle from a collection target URL."""
+
+    parsed = urlparse(str(value or ""))
+    parts = [unquote(part).strip() for part in parsed.path.split("/") if part.strip()]
+    for index, part in enumerate(parts[:-1]):
+        if part.lower() in {"in", "company"}:
+            return parts[index + 1]
+    return ""
+
+
+def source_profile_handle(raw: Dict[str, Any]) -> str:
+    """Return the watchlist profile whose feed supplied a record, when the actor provides it."""
+
+    query = raw.get("query")
+    query_target = (
+        first_present(query, "targetUrl", "profileUrl", "url", default="")
+        if isinstance(query, dict)
+        else ""
+    )
+    reposted_by = raw.get("repostedBy") or {}
+    if not isinstance(reposted_by, dict):
+        reposted_by = {}
+    return str(
+        profile_handle_from_url(query_target)
+        or first_present(reposted_by, "publicIdentifier", "handle", "username", "slug", default="")
+    )
+
+
 def canonical_post(raw: Dict[str, Any], scraped_at: str | None = None) -> Dict[str, Any]:
     """Map a permissive actor response into the repository's stable post contract."""
     author = raw.get("author") or raw.get("authorProfile") or raw.get("profile") or {}
@@ -164,14 +194,24 @@ def canonical_post(raw: Dict[str, Any], scraped_at: str | None = None) -> Dict[s
     if not isinstance(engagement, dict):
         engagement = {}
     text = str(first_present(raw, "text", "postText", "content", "description", default=""))
-    author_handle = str(
+    original_author_handle = str(
         first_present(author, "publicIdentifier", "handle", "username", "slug", default="")
         or first_present(raw, "author_handle", "authorHandle", "authorPublicIdentifier", default="")
     )
-    author_name = str(
+    original_author_name = str(
         first_present(author, "name", "fullName", default="")
         or first_present(raw, "author_name", "authorName", default="")
     )
+    source_handle = source_profile_handle(raw)
+    author_handle = source_handle or original_author_handle
+    reposted_by = raw.get("repostedBy") or {}
+    if not isinstance(reposted_by, dict):
+        reposted_by = {}
+    author_name = str(
+        first_present(reposted_by, "name", "fullName", default="")
+        if source_handle
+        else original_author_name
+    ) or original_author_name
     media = raw.get("media") or raw.get("images") or raw.get("image") or []
     media_type = str(first_present(raw, "media_type", "mediaType", "type", default="none")).lower()
     if media_type not in {"image", "carousel", "video", "document", "none"}:
@@ -199,6 +239,9 @@ def canonical_post(raw: Dict[str, Any], scraped_at: str | None = None) -> Dict[s
         "platform": "linkedin",
         "author_handle": author_handle,
         "author_name": author_name,
+        "source_profile_handle": source_handle or None,
+        "original_author_handle": original_author_handle or None,
+        "original_author_name": original_author_name or None,
         "author_info": str(first_present(author, "headline", "description", default="")),
         "url": url,
         "posted_at": iso_datetime(posted_value),

@@ -37,6 +37,23 @@ def test_normalization_maps_nested_actor_timestamp():
     assert post["posted_at"] == "2026-07-31T00:00:00Z"
 
 
+def test_normalization_attributes_a_profile_feed_repost_to_the_watchlist_profile():
+    post = canonical_post(
+        {
+            "id": "repost",
+            "content": "A reposted post.",
+            "author": {"publicIdentifier": "original-author", "name": "Original Author"},
+            "repostedBy": {"publicIdentifier": "watched-profile", "name": "Watched Profile"},
+            "query": {"targetUrl": "https://www.linkedin.com/in/watched-profile/"},
+        }
+    )
+
+    assert post["author_handle"] == "watched-profile"
+    assert post["source_profile_handle"] == "watched-profile"
+    assert post["original_author_handle"] == "original-author"
+    assert post["author_name"] == "Watched Profile"
+
+
 def test_xfactor_excludes_current_post_and_requires_sample():
     current = datetime(2026, 2, 1, tzinfo=timezone.utc)
     posts = []

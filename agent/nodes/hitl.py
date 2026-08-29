@@ -12,6 +12,10 @@ VALID_ACTIONS = {"approve", "edit", "reject", "retry", "escalate", "annotate"}
 
 
 def _review_payload(state: DraftState) -> dict[str, Any]:
+    cost_events = state.get("cost_events", [])
+    running_cost_usd = round(
+        sum(float(event.get("usd") or 0) for event in cost_events if isinstance(event, dict)), 8
+    )
     return {
         "task": "Review grounded LinkedIn draft before it can enter drafts/queue/.",
         "draft": state.get("draft", ""),
@@ -32,7 +36,8 @@ def _review_payload(state: DraftState) -> dict[str, Any]:
         }
         if isinstance(state.get("market_brief"), dict)
         else {},
-        "cost_events": state.get("cost_events", []),
+        "cost_events": cost_events,
+        "running_cost_usd": running_cost_usd,
         "actions": sorted(VALID_ACTIONS),
     }
 
@@ -62,6 +67,8 @@ def hitl(state: DraftState) -> dict:
             annotations.append(annotation)
         critique["annotations"] = annotations
         update["critique"] = critique
+    elif action == "reject":
+        update["terminal_reason"] = "Reviewer rejected the draft."
     elif action == "escalate":
         update["terminal_reason"] = str(response.get("reason") or "Reviewer requested escalation.")
     return update

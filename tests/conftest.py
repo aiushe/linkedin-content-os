@@ -1,5 +1,6 @@
 """Make repository-local scripts importable without packaging them as an application library."""
 
+import logging
 import sys
 from pathlib import Path
 
@@ -8,6 +9,19 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+
+def pytest_configure() -> None:
+    """Keep asynchronous LangSmith transport failures out of the pytest console.
+
+    This changes logging only. In particular, it does not alter LANGSMITH_TRACING, because that
+    setting also controls the privacy boundary for profile-memory prompt context.
+    """
+
+    logger = logging.getLogger("langsmith")
+    logger.setLevel(logging.CRITICAL + 1)
+    logger.addHandler(logging.NullHandler())
+    logger.propagate = False
 
 
 @pytest.fixture

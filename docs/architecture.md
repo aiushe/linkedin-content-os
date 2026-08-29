@@ -103,6 +103,32 @@ Mem0 project. Profile memory remains withheld from model prompts during LangSmit
 tracing unless `MEM0_ALLOW_LANGSMITH_TRACING=true`; that prevents the profile
 facts from appearing in dashboard prompt traces without a second approval.
 
+## Authored skill loading
+
+`agent/skills.py` discovers the eleven authored `SKILL.md` files in `.claude/skills/`.
+Their front matter (name and description) forms the always-available catalogue, while full skill
+bodies and any local references are loaded only for the selected graph role. This is deliberate
+progressive disclosure: the writer sees only the playbooks relevant to the request, and no skill
+can become factual evidence.
+
+| Graph role | Selected authored skills |
+| --- | --- |
+| `authority` | `authority-post`, `hook-lab`, `voice-check` |
+| `reach` | `reach-post`, `post-templatizer`, `hook-lab`, `voice-check` |
+| `comment` | `comment-drafter`, `voice-check` |
+| `profile_rewrite` | `jd-keyword-miner`, `profile-rewriter` |
+| `outreach` | `target-mapper`, `comment-drafter` |
+| `curation` | `story-bank-curator` |
+| `image` | `image-brief` |
+
+## Profile-memory position and failure mode
+
+`profile_memory` is the graph's first node, directly after `START` and before `intake_router`.
+It is read-only and **DEGRADABLE**: a disabled or unavailable Mem0 service leaves the memory list
+empty, records a visible status/error, and lets local deterministic grounding continue. When
+`LANGSMITH_TRACING=true` without explicit `MEM0_ALLOW_LANGSMITH_TRACING=true`, it records the
+`withheld_for_langsmith_tracing` status and sends no retrieved personal memory to a model prompt.
+
 ## Model and market configuration
 
 The default test path is offline. For Nebius Token Factory, configure a local `.env` with an

@@ -2,6 +2,7 @@ from langgraph.types import Command
 
 from agent import config
 from agent.graph import build_graph
+from agent.nodes.hitl import VALID_ACTIONS, _review_payload
 from pipeline import common
 
 
@@ -44,6 +45,29 @@ def test_human_approval_is_required_before_graph_commits(synthetic_corpus, monke
     state = graph.get_state(run_config).values
     assert state["queue_path"].startswith("drafts/queue/")
     assert (tmp_path / state["queue_path"]).exists()
+
+
+def test_review_payload_contains_the_complete_human_approval_context():
+    payload = _review_payload(
+        {
+            "draft": "A grounded draft.",
+            "voice_report": {"verdict": "pass"},
+            "claims_report": {"verdict": "pass"},
+            "stories": [{"id": "story", "title": "Story", "path": "private/stories/story.md"}],
+            "revision": 2,
+            "cost_events": [{"node": "write", "usd": 0.0125}],
+        }
+    )
+
+    assert payload["draft"] == "A grounded draft."
+    assert payload["voice_report"]["verdict"] == "pass"
+    assert payload["claims_report"]["verdict"] == "pass"
+    assert payload["evidence"] == [
+        {"id": "story", "title": "Story", "path": "private/stories/story.md"}
+    ]
+    assert payload["revision"] == 2
+    assert payload["running_cost_usd"] == 0.0125
+    assert set(payload["actions"]) == VALID_ACTIONS
 
 
 def test_ungrounded_metric_hard_stops(synthetic_corpus, monkeypatch):

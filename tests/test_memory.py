@@ -130,6 +130,22 @@ def test_memory_node_withholds_context_from_langsmith_without_second_approval(mo
     assert result["degradation_reasons"]
 
 
+@pytest.mark.parametrize(
+    ("tracing", "expected"),
+    [("true", False), ("false", True)],
+)
+def test_mem0_prompt_privacy_guard_changes_only_with_langsmith_tracing(
+    monkeypatch, tracing, expected
+):
+    """Tracing, not pytest logging, controls whether profile memory reaches prompts."""
+
+    monkeypatch.setattr(config, "mem0_service_enabled", lambda: True)
+    monkeypatch.setattr(config, "MEM0_ALLOW_LANGSMITH_TRACING", False)
+    monkeypatch.setenv("LANGSMITH_TRACING", tracing)
+
+    assert config.mem0_prompt_enabled() is expected
+
+
 def test_memory_node_degrades_without_widening_grounding(monkeypatch):
     monkeypatch.setattr(config, "mem0_service_enabled", lambda: True)
     monkeypatch.setattr(config, "mem0_prompt_enabled", lambda: True)

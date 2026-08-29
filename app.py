@@ -158,12 +158,33 @@ def render(state: dict) -> None:
         st.write("Hook variants")
         for hook in state.get("hooks", []):
             st.write(f"- {hook}")
-    if state.get("claims_report"):
-        report = state["claims_report"]
+    if state.get("claims_report") or state.get("voice_report"):
+        st.subheader("Deterministic gate reports")
+        report = state.get("claims_report", {})
         unmatched = report.get("unmatched", [])
         if unmatched:
             st.error("Ungrounded spans: " + ", ".join(str(item.get("span")) for item in unmatched))
-        st.json({"claims": report, "voice": state.get("voice_report", {})})
+        claims_column, voice_column = st.columns(2)
+        with claims_column:
+            st.caption("Factual claims gate")
+            st.json(report)
+        with voice_column:
+            st.caption("Voice fingerprint gate")
+            st.json(state.get("voice_report", {}))
+    if state.get("stories"):
+        st.subheader("Retrieval evidence")
+        st.dataframe(
+            [
+                {
+                    "story_id": story.get("id", ""),
+                    "title": story.get("title", ""),
+                    "source_path": story.get("path", ""),
+                }
+                for story in state["stories"]
+                if isinstance(story, dict)
+            ],
+            use_container_width=True,
+        )
     if isinstance(state.get("market_brief"), dict):
         brief = state["market_brief"]
         st.subheader("Market intelligence")
@@ -184,6 +205,12 @@ def render(state: dict) -> None:
             st.caption(f"Market intelligence unavailable: {brief['reason']}")
     if state.get("cost_events"):
         st.subheader("Cost events")
+        running_cost = sum(
+            float(event.get("usd") or 0)
+            for event in state["cost_events"]
+            if isinstance(event, dict)
+        )
+        st.metric("Running model cost", f"${running_cost:.5f}")
         st.dataframe(state["cost_events"], use_container_width=True)
     if state.get("queue_path"):
         st.success(f"Queued for review: {state['queue_path']}")
@@ -208,8 +235,16 @@ if submitted:
 state = current_state()
 render(state)
 
-if state.get("gate_verdict") == "pass" and not state.get("queue_path"):
+if (
+    state.get("gate_verdict") == "pass"
+    and not state.get("queue_path")
+    and state.get("decision") not in {"reject", "escalate"}
+):
     st.subheader("Human review")
+    st.caption(f"Revision {state.get('revision', 0)} · choose exactly one review action.")
+    st.text_area(
+        "Edited draft (used if Edit is selected)", key="edited_draft", value=state.get("draft", "")
+    )
     annotation = st.text_input("Optional annotation")
     columns = st.columns(6)
     actions = ["approve", "edit", "reject", "retry", "escalate", "annotate"]
@@ -222,6 +257,3 @@ if state.get("gate_verdict") == "pass" and not state.get("queue_path"):
                 response["annotation"] = annotation
             graph().invoke(Command(resume=response), config=config())
             st.rerun()
-    st.text_area(
-        "Edited draft (used if Edit is selected)", key="edited_draft", value=state.get("draft", "")
-    )
