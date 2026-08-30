@@ -1,12 +1,7 @@
-"""MCP surface for grounded, local content work.
-
-Every read tool returns files the user can inspect. `log_story` is the only write tool and
-always marks submitted metrics unverified until the truth table is updated with evidence.
-"""
+"""Read-only MCP surface for grounded, local content work."""
 
 from __future__ import annotations
 
-import json
 import re
 import sys
 from pathlib import Path
@@ -21,16 +16,7 @@ if str(ROOT) not in sys.path:
 
 from agent.gates import safe_voice_score
 from pipeline.claims import check as check_claims_report
-from pipeline.common import (
-    INTEL,
-    content_hash,
-    identity_file,
-    load_all_posts,
-    parse_datetime,
-    private_stories_dir,
-    read_json,
-    slugify,
-)
+from pipeline.common import INTEL, identity_file, load_all_posts, parse_datetime, read_json
 from pipeline.index_corpus import build_index
 from pipeline.selfmetrics import my_posts
 
@@ -103,7 +89,7 @@ def check_claims(draft_text: str) -> Dict[str, Any]:
 
 @mcp.tool()
 def get_voice_report(draft_text: str) -> Dict[str, Any]:
-    """Run the fail-closed deterministic voice gate used by the LangGraph harness."""
+    """Run the deterministic advisory voice check used by the LangGraph harness."""
     return safe_voice_score(draft_text)
 
 
@@ -228,64 +214,6 @@ def author_baseline(handle: str) -> Dict[str, Any]:
 def my_performance(window: int = 30) -> List[Dict[str, Any]]:
     """Return your own posts (flagged `is_mine`) for human performance review."""
     return my_posts(load_all_posts(), window=max(1, min(window, 100)))
-
-
-@mcp.tool()
-def log_story(text: str, pillars: List[str], metrics: Optional[List[str]] = None) -> Dict[str, Any]:
-    """Create a story-bank intake file; supplied metrics remain unverified until evidence exists."""
-    title = next(
-        (line.strip("# ") for line in text.splitlines() if line.strip()), "Untitled story"
-    )[:100]
-    identifier = f"{slugify(title)}-{content_hash(text)[:6]}"
-    destination = private_stories_dir() / f"{identifier}.md"
-    if destination.exists():
-        return {"status": "exists", "path": str(destination.relative_to(ROOT))}
-    metric_lines = metrics or []
-    frontmatter = [
-        "---",
-        f"id: {identifier}",
-        f"title: {json.dumps(title)}",
-        "date: unknown",
-        f"pillars: [{', '.join(pillars)}]",
-        "stage: unknown",
-        'role_context: ""',
-        "metrics:",
-    ]
-    for metric in metric_lines:
-        frontmatter.extend(
-            [f"  - claim: {json.dumps(metric)}", '    proof: ""', "    verified: false"]
-        )
-    if not metric_lines:
-        frontmatter.append('  - claim: ""')
-        frontmatter.append('    proof: ""')
-        frontmatter.append("    verified: false")
-    frontmatter.extend(
-        [
-            'tension: ""',
-            'turn: ""',
-            'result: ""',
-            'lesson: ""',
-            "emotions: []",
-            "used_in: []",
-            "---",
-            "",
-            "# What happened",
-            "",
-            text.strip(),
-            "",
-            "## Verification needed",
-            "",
-            "- Add evidence to each metric and then update `private/identity/truth-table.md`.",
-            "",
-        ]
-    )
-    destination.write_text("\n".join(frontmatter), encoding="utf-8")
-    build_index()
-    return {
-        "status": "created",
-        "path": str(destination.relative_to(ROOT)),
-        "warning": "Metrics were recorded as unverified.",
-    }
 
 
 if __name__ == "__main__":

@@ -6,7 +6,11 @@ pillar: ""
 story_ids: []
 template_id: null
 claims_checked: false
+claims_verdict: pending
+unresolved_claims_acknowledged: false
+unresolved_claim_spans: []
 voice_check: pending
+confidential_terms_check: pending
 created_at: YYYY-MM-DD
 ---
 

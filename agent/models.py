@@ -91,7 +91,7 @@ def get_model(role: ModelRole, *, callbacks: list[Any] | None = None) -> Any:
         "callbacks": callbacks or [],
         "timeout": config.LLM_TIMEOUT_SECONDS,
         # A request timeout must remain a real upper bound. Retrying a stalled request
-        # inside the provider client would multiply that bound before the graph can escalate.
+        # inside the provider client would multiply that bound before the graph can report it.
         "max_retries": 0,
     }
     if config.LLM_BASE_URL:

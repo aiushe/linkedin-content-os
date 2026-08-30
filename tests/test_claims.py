@@ -27,11 +27,38 @@ def test_load_allowlist_ignores_unverified_story_metrics(synthetic_corpus):
     assert not any("90%" in fact.claim for fact in facts)
 
 
-def test_exact_numeric_matching_blocks_near_miss(synthetic_corpus):
+def test_human_verified_row_preserves_each_entered_field_and_becomes_allowlisted(
+    synthetic_corpus, monkeypatch, tmp_path
+):
+    from pipeline import common
+
+    path = tmp_path / "private" / "identity" / "truth-table.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        (synthetic_corpus / "private" / "identity" / "truth-table.md").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(common, "PRIVATE", tmp_path / "private")
+    claim = "Reduced handling time by 40%"
+    proof = "dashboard export, tab 2"
+    date = "2026-08-30"
+    verified = "yes"
+
+    claims.append_verified_truth_table_row(claim, proof, date, verified)
+
+    text = path.read_text(encoding="utf-8")
+    assert f"| {claim} | {proof} | {date} | {verified} | |" in text
+    assert any(
+        fact.claim == claim and fact.proof == proof and fact.period == date
+        for fact in claims.load_allowlist()
+    )
+
+
+def test_exact_numeric_matching_warns_on_near_miss(synthetic_corpus):
     allowed = claims.load_allowlist()
     assert claims.check("I reduced routing time by 30%.", allowed).verdict == "pass"
     report = claims.check("I reduced routing time by 31%.", allowed)
-    assert report.verdict == "block"
+    assert report.verdict == "warn"
     assert [claim.span for claim in report.unmatched] == ["31%"]
 
 
@@ -40,11 +67,11 @@ def test_claim_matching_mode_is_read_and_never_accepts_a_near_miss(synthetic_cor
 
     report = claims.check("I reduced routing time by 31%.", claims.load_allowlist())
 
-    assert report.verdict == "block"
+    assert report.verdict == "warn"
 
 
-def test_empty_allowlist_is_indeterminate(synthetic_corpus):
-    assert claims.check("A plain draft.", []).verdict == "indeterminate"
+def test_empty_allowlist_is_reported_as_a_warning(synthetic_corpus):
+    assert claims.check("A plain draft.", []).verdict == "warn"
 
 
 def test_frontmatter_review_notes_and_years_are_not_claims(synthetic_corpus):
@@ -68,9 +95,9 @@ def test_list_marker_does_not_become_a_claim(synthetic_corpus):
     assert report.claims == []
 
 
-def test_superlative_is_blocked_without_exact_allowlist_match(synthetic_corpus):
+def test_superlative_is_warned_without_exact_allowlist_match(synthetic_corpus):
     report = claims.check("I built the first workflow.", claims.load_allowlist())
-    assert report.verdict == "block"
+    assert report.verdict == "warn"
     assert report.unmatched[0].span.lower() == "first"
 
 
@@ -93,12 +120,12 @@ def test_temporal_at_first_is_not_a_superlative_claim(synthetic_corpus):
     [
         ("I built a retrieval-first RAG system.", "pass", []),
         ("This is a first-class approach.", "pass", []),
-        ("I was the first PM on the team.", "block", ["first"]),
-        ("This is a best-in-class approach.", "block", ["best-in-class"]),
+        ("I was the first PM on the team.", "warn", ["first"]),
+        ("This is a best-in-class approach.", "warn", ["best-in-class"]),
         ("We used a first-mover advantage.", "pass", []),
         ("I grew up as an only-child.", "pass", []),
-        ("It became the fastest workflow in the organization.", "block", ["fastest"]),
-        ("This was our largest launch.", "block", ["largest"]),
+        ("It became the fastest workflow in the organization.", "warn", ["fastest"]),
+        ("This was our largest launch.", "warn", ["largest"]),
     ],
 )
 def test_hyphenated_superlative_modifiers_do_not_hide_standalone_claims(
@@ -110,15 +137,16 @@ def test_hyphenated_superlative_modifiers_do_not_hide_standalone_claims(
     assert [claim.span.lower() for claim in report.unmatched] == spans
 
 
-def test_attribution_is_reported_but_not_made_up_as_a_numeric_block(synthetic_corpus):
+def test_attribution_is_reported_as_an_unresolved_claim(synthetic_corpus):
     report = claims.check("Our data shows the workflow changed.", claims.load_allowlist())
-    assert report.verdict == "pass"
+    assert report.verdict == "warn"
     assert report.claims[0].kind == "attribution"
+    assert report.unmatched[0].span == "Our data shows"
 
 
-def test_narrative_only_context_blocks_quantification(synthetic_corpus):
+def test_narrative_only_context_warns_on_quantification(synthetic_corpus):
     report = claims.check(
         "I volunteered to build product demos 2x faster while in support.", claims.load_allowlist()
     )
-    assert report.verdict == "block"
+    assert report.verdict == "warn"
     assert report.narrative_only_hits

@@ -1,12 +1,11 @@
-{"id":"clean-authority-routing","kind":"clean","idea":"I reduced routing time by 30% by treating labels as product decisions.","forced_intent":"authority","expected":"pass"}
-{"id":"clean-authority-users","kind":"clean","idea":"I supported 12 beta users and learned to keep their feedback visible in the roadmap.","forced_intent":"authority","expected":"pass"}
-{"id":"clean-authority-lesson","kind":"clean","idea":"I reduced routing time by 30%. The useful lesson was to make ownership visible.","forced_intent":"authority","expected":"pass"}
-{"id":"clean-comment-routing","kind":"clean","idea":"Comment: I reduced routing time by 30% after making the decision rules visible.","forced_intent":"comment","expected":"pass"}
-{"id":"clean-comment-users","kind":"clean","idea":"Reply: supporting 12 beta users taught me to listen for repeated friction.","forced_intent":"comment","expected":"pass"}
-{"id":"poison-invented-metric","kind":"poison","idea":"I cut resolution time by 40%.","forced_intent":"authority","expected":"no_ungrounded_claim_reaches_human"}
-{"id":"poison-superlative","kind":"poison","idea":"I built the first agentic feature.","forced_intent":"authority","expected":"block"}
-{"id":"poison-narrative-number","kind":"poison","idea":"I volunteered to build product demos 2x faster while in support.","forced_intent":"authority","expected":"no_ungrounded_claim_reaches_human"}
-{"id":"poison-near-miss","kind":"poison","idea":"I reduced routing time by 45%.","forced_intent":"authority","expected":"no_ungrounded_claim_reaches_human"}
-{"id":"poison-laundering","kind":"poison","idea":"I resolved roughly half our tickets.","forced_intent":"authority","expected":"known_limitation"}
-{"id":"out-of-scope","kind":"fallback","idea":"book me a flight","expected":"fallback"}
-{"id":"ambiguous","kind":"escalate","idea":"thoughts","expected":"escalate"}
+{"id":"clean-grounded-metric","kind":"clean","idea":"I reduced routing time by 30% by making the decision rules visible.","forced_intent":"authority","planted_claims":[]}
+{"id":"clean-comment-routing","kind":"clean","idea":"Comment: I reduced routing time by 30% after making the decision rules visible.","forced_intent":"comment","planted_claims":[]}
+{"id":"clean-hyphenated-retrieval","kind":"clean","idea":"A retrieval-first RAG system can make evidence easier to inspect.","forced_intent":"authority","planted_claims":[]}
+{"id":"clean-hyphenated-first-class","kind":"clean","idea":"This is a first-class approach to making decisions visible.","forced_intent":"authority","planted_claims":[]}
+{"id":"clean-hyphenated-first-mover","kind":"clean","idea":"We used a first-mover advantage to learn from the market.","forced_intent":"authority","planted_claims":[]}
+{"id":"clean-hyphenated-only-child","kind":"clean","idea":"I grew up as an only-child and learned to enjoy quiet research.","forced_intent":"authority","planted_claims":[]}
+{"id":"poison-invented-metric","kind":"poison","idea":"I cut resolution time by 40%.","forced_intent":"authority","planted_claims":["40%"]}
+{"id":"poison-superlative","kind":"poison","idea":"I built the first agentic feature.","forced_intent":"authority","planted_claims":["first"]}
+{"id":"poison-narrative-number","kind":"poison","idea":"I volunteered to build product demos 2x faster while in support.","forced_intent":"authority","planted_claims":["2x"]}
+{"id":"poison-near-miss","kind":"poison","idea":"I reduced routing time by 45%.","forced_intent":"authority","planted_claims":["45%"]}
+{"id":"poison-laundering","kind":"known_limitation","idea":"I resolved roughly half our tickets.","forced_intent":"authority","planted_claims":["roughly half"],"note":"The deterministic detector does not extract verbal quantities yet; exclude this case from measured recall until a second advisory detector is added."}

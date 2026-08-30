@@ -15,12 +15,7 @@ from pipeline import claims
 from .errors import AgentFailure, FailureClass, with_retry
 from .mcp_loader import server as content_mcp
 
-# `log_story` is intentionally unavailable to the LangGraph graph. It writes to the
-# personal story bank, whereas this graph is structurally read-only until its human-gated
-# commit node. Claude Code may expose it as an explicitly human-invoked intake action.
-CLAUDE_CODE_ONLY_MCP_TOOLS = {
-    "log_story": "Writes private story intake and is intentionally not a graph tool."
-}
+CLAUDE_CODE_ONLY_MCP_TOOLS: dict[str, str] = {}
 
 
 def _call_mcp(candidate: Any, **kwargs: Any) -> Any:

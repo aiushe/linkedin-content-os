@@ -6,8 +6,16 @@ import operator
 from typing import Annotated, Literal, NotRequired, TypedDict
 
 Intent = Literal["authority", "reach", "comment", "profile_rewrite", "outreach", "out_of_scope"]
-Decision = Literal["approve", "edit", "reject", "retry", "escalate", "annotate"]
-GateVerdict = Literal["pass", "revise", "block", "indeterminate"]
+Decision = Literal[
+    "approve",
+    "edit",
+    "feedback",
+    "source",
+    "reject",
+    "retry",
+    "annotate",
+]
+GateVerdict = Literal["pass", "warn", "revise"]
 
 
 class DraftState(TypedDict, total=False):
@@ -45,6 +53,7 @@ class DraftState(TypedDict, total=False):
     hooks: list[str]
     revision: int
     draft_history: Annotated[list[dict], operator.add]
+    user_directions: Annotated[list[str], operator.add]
 
     # Gates
     voice_report: dict
@@ -60,5 +69,6 @@ class DraftState(TypedDict, total=False):
     cost_events: Annotated[list[dict], operator.add]
     decision: Decision | None
     human_edit: str | None
+    claim_source_error: str | None
     queue_path: str | None
     terminal_reason: str | None

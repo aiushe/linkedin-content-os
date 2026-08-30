@@ -47,13 +47,13 @@ def test_confidential_gate_cannot_block_an_otherwise_passing_draft(monkeypatch):
     assert report.confidential.verdict == "warn"
 
 
-def test_confidential_verdict_is_ignored_even_if_it_is_misreported_as_block():
+def test_confidential_verdict_is_ignored_even_if_it_is_unexpected():
     assert reduce_verdicts(
-        {"verdict": "pass"}, {"verdict": "pass"}, {"verdict": "block"}
+        {"verdict": "pass"}, {"verdict": "pass"}, {"verdict": "unexpected"}
     ) == "pass"
 
 
-def test_claims_gate_still_can_block():
+def test_claims_gate_is_advisory():
     assert reduce_verdicts(
-        {"verdict": "pass"}, {"verdict": "block"}, {"verdict": "warn"}
-    ) == "block"
+        {"verdict": "pass"}, {"verdict": "warn"}, {"verdict": "warn"}
+    ) == "warn"

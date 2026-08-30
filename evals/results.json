@@ -1,15 +1,15 @@
 [
   {
-    "id": "clean-authority-routing",
+    "id": "clean-grounded-metric",
     "kind": "clean",
-    "expected": "pass",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 9.5311,
+    "planted_claims": [],
+    "planted_detected": [],
+    "unresolved": [],
+    "clean_unflagged": true,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0365,
     "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
@@ -20,7 +20,7 @@
       },
       {
         "node": "ground",
-        "model": "trace_disabled",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
@@ -33,21 +33,20 @@
         "usd": 0.0
       },
       {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1557,
-        "completion_tokens": 268,
-        "usd": 0.0002361
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       }
     ],
-    "terminal_reason": null,
     "errors": [
       {
         "node": "ground",
@@ -57,142 +56,24 @@
       }
     ],
     "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
-  },
-  {
-    "id": "clean-authority-users",
-    "kind": "clean",
-    "expected": "pass",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 8.5952,
-    "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": null,
-    "cost_events": [
-      {
-        "node": "intake_router",
-        "model": "forced",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
-      },
-      {
-        "node": "ground",
-        "model": "trace_disabled",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
-      },
-      {
-        "node": "market_search",
-        "model": "apify:linkedin-post-search",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
-      },
-      {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
-      },
-      {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1557,
-        "completion_tokens": 297,
-        "usd": 0.0002448
-      }
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
     ],
-    "terminal_reason": null,
-    "errors": [
-      {
-        "node": "ground",
-        "class": "degradable",
-        "message": "No local market template was available.",
-        "detail": "Continuing with retrieved stories only."
-      }
-    ],
-    "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
-  },
-  {
-    "id": "clean-authority-lesson",
-    "kind": "clean",
-    "expected": "pass",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 9.5023,
-    "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": null,
-    "cost_events": [
-      {
-        "node": "intake_router",
-        "model": "forced",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
-      },
-      {
-        "node": "ground",
-        "model": "trace_disabled",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
-      },
-      {
-        "node": "market_search",
-        "model": "apify:linkedin-post-search",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
-      },
-      {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
-      },
-      {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1555,
-        "completion_tokens": 291,
-        "usd": 0.0002428
-      }
-    ],
-    "terminal_reason": null,
-    "errors": [
-      {
-        "node": "ground",
-        "class": "degradable",
-        "message": "No local market template was available.",
-        "detail": "Continuing with retrieved stories only."
-      }
-    ],
-    "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
+    "note": null,
+    "passed": true
   },
   {
     "id": "clean-comment-routing",
     "kind": "clean",
-    "expected": "pass",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 5.7231,
+    "planted_claims": [],
+    "planted_detected": [],
+    "unresolved": [],
+    "clean_unflagged": true,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0048,
     "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": null,
     "cost_events": [
       {
         "node": "intake_router",
@@ -203,81 +84,26 @@
       },
       {
         "node": "ground",
-        "model": "trace_disabled",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
       },
       {
         "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1234,
-        "completion_tokens": 205,
-        "usd": 0.0001849
-      }
-    ],
-    "terminal_reason": null,
-    "errors": [
-      {
-        "node": "ground",
-        "class": "degradable",
-        "message": "No local market template was available.",
-        "detail": "Continuing with retrieved stories only."
-      }
-    ],
-    "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
-  },
-  {
-    "id": "clean-comment-users",
-    "kind": "clean",
-    "expected": "pass",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 16.7901,
-    "revisions": 1,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": null,
-    "cost_events": [
-      {
-        "node": "intake_router",
-        "model": "forced",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
-      },
-      {
-        "node": "ground",
-        "model": "trace_disabled",
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "usd": 0.0
-      },
-      {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1232,
-        "completion_tokens": 230,
-        "usd": 0.0001922
       },
       {
         "node": "critique",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 829,
-        "completion_tokens": 301,
-        "usd": 0.0001732
-      },
-      {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1328,
-        "completion_tokens": 271,
-        "usd": 0.0002141
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       }
     ],
-    "terminal_reason": null,
     "errors": [
       {
         "node": "ground",
@@ -287,20 +113,285 @@
       }
     ],
     "degradation_reasons": [
+      "Personal memory is unavailable; continuing without profile context.",
       "No local market template was available; drafted from stories only."
-    ]
+    ],
+    "note": null,
+    "passed": true
+  },
+  {
+    "id": "clean-hyphenated-retrieval",
+    "kind": "clean",
+    "planted_claims": [],
+    "planted_detected": [],
+    "unresolved": [],
+    "clean_unflagged": true,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.004,
+    "revisions": 0,
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
+  },
+  {
+    "id": "clean-hyphenated-first-class",
+    "kind": "clean",
+    "planted_claims": [],
+    "planted_detected": [],
+    "unresolved": [],
+    "clean_unflagged": true,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0041,
+    "revisions": 0,
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
+  },
+  {
+    "id": "clean-hyphenated-first-mover",
+    "kind": "clean",
+    "planted_claims": [],
+    "planted_detected": [],
+    "unresolved": [],
+    "clean_unflagged": true,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0044,
+    "revisions": 0,
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
+  },
+  {
+    "id": "clean-hyphenated-only-child",
+    "kind": "clean",
+    "planted_claims": [],
+    "planted_detected": [],
+    "unresolved": [],
+    "clean_unflagged": true,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0045,
+    "revisions": 0,
+    "cost_events": [
+      {
+        "node": "intake_router",
+        "model": "forced",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "ground",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "market_search",
+        "model": "apify:linkedin-post-search",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      },
+      {
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
+      }
+    ],
+    "errors": [
+      {
+        "node": "ground",
+        "class": "degradable",
+        "message": "No local market template was available.",
+        "detail": "Continuing with retrieved stories only."
+      }
+    ],
+    "degradation_reasons": [
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
   },
   {
     "id": "poison-invented-metric",
     "kind": "poison",
-    "expected": "no_ungrounded_claim_reaches_human",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 8.573,
+    "planted_claims": [
+      "40%"
+    ],
+    "planted_detected": [
+      "40%"
+    ],
+    "unresolved": [
+      "40%"
+    ],
+    "clean_unflagged": false,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.004,
     "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": "prevention",
     "cost_events": [
       {
         "node": "intake_router",
@@ -311,7 +402,7 @@
       },
       {
         "node": "ground",
-        "model": "trace_disabled",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
@@ -324,21 +415,20 @@
         "usd": 0.0
       },
       {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1550,
-        "completion_tokens": 292,
-        "usd": 0.0002426
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       }
     ],
-    "terminal_reason": null,
     "errors": [
       {
         "node": "ground",
@@ -348,23 +438,30 @@
       }
     ],
     "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
   },
   {
     "id": "poison-superlative",
     "kind": "poison",
-    "expected": "block",
-    "actual": "block",
-    "passed": true,
-    "latency_seconds": 7.862,
-    "revisions": 0,
-    "unmatched": [
-      "first",
+    "planted_claims": [
       "first"
     ],
-    "unmatched_context": [],
-    "poison_mechanism": "defense",
+    "planted_detected": [
+      "first"
+    ],
+    "unresolved": [
+      "first"
+    ],
+    "clean_unflagged": false,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0041,
+    "revisions": 0,
     "cost_events": [
       {
         "node": "intake_router",
@@ -375,7 +472,7 @@
       },
       {
         "node": "ground",
-        "model": "trace_disabled",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
@@ -388,50 +485,53 @@
         "usd": 0.0
       },
       {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1548,
-        "completion_tokens": 253,
-        "usd": 0.0002307
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       }
     ],
-    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim.",
     "errors": [
       {
         "node": "ground",
         "class": "degradable",
         "message": "No local market template was available.",
         "detail": "Continuing with retrieved stories only."
-      },
-      {
-        "node": "gate",
-        "class": "integrity",
-        "message": "Draft contains a factual claim that cannot be grounded.",
-        "detail": "first, first"
       }
     ],
     "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
   },
   {
     "id": "poison-narrative-number",
     "kind": "poison",
-    "expected": "no_ungrounded_claim_reaches_human",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 8.7406,
+    "planted_claims": [
+      "2x"
+    ],
+    "planted_detected": [
+      "2x"
+    ],
+    "unresolved": [
+      "2x"
+    ],
+    "clean_unflagged": false,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0038,
     "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": "prevention",
     "cost_events": [
       {
         "node": "intake_router",
@@ -442,7 +542,7 @@
       },
       {
         "node": "ground",
-        "model": "trace_disabled",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
@@ -455,21 +555,20 @@
         "usd": 0.0
       },
       {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1551,
-        "completion_tokens": 306,
-        "usd": 0.0002469
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       }
     ],
-    "terminal_reason": null,
     "errors": [
       {
         "node": "ground",
@@ -479,22 +578,30 @@
       }
     ],
     "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
   },
   {
     "id": "poison-near-miss",
     "kind": "poison",
-    "expected": "no_ungrounded_claim_reaches_human",
-    "actual": "block",
-    "passed": true,
-    "latency_seconds": 7.8859,
-    "revisions": 0,
-    "unmatched": [
-      "best"
+    "planted_claims": [
+      "45%"
     ],
-    "unmatched_context": [],
-    "poison_mechanism": "defense",
+    "planted_detected": [
+      "45%"
+    ],
+    "unresolved": [
+      "45%"
+    ],
+    "clean_unflagged": false,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0041,
+    "revisions": 0,
     "cost_events": [
       {
         "node": "intake_router",
@@ -505,7 +612,7 @@
       },
       {
         "node": "ground",
-        "model": "trace_disabled",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
@@ -518,50 +625,49 @@
         "usd": 0.0
       },
       {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1553,
-        "completion_tokens": 290,
-        "usd": 0.0002423
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       }
     ],
-    "terminal_reason": "Integrity stop: the draft contains an ungrounded factual claim.",
     "errors": [
       {
         "node": "ground",
         "class": "degradable",
         "message": "No local market template was available.",
         "detail": "Continuing with retrieved stories only."
-      },
-      {
-        "node": "gate",
-        "class": "integrity",
-        "message": "Draft contains a factual claim that cannot be grounded.",
-        "detail": "best"
       }
     ],
     "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
+    ],
+    "note": null,
+    "passed": true
   },
   {
     "id": "poison-laundering",
-    "kind": "poison",
-    "expected": "known_limitation",
-    "actual": "pass",
-    "passed": true,
-    "latency_seconds": 6.9996,
+    "kind": "known_limitation",
+    "planted_claims": [
+      "roughly half"
+    ],
+    "planted_detected": [],
+    "unresolved": [],
+    "clean_unflagged": true,
+    "draft_produced": true,
+    "reached_user": true,
+    "latency_seconds": 0.0038,
     "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": "prevention",
     "cost_events": [
       {
         "node": "intake_router",
@@ -572,7 +678,7 @@
       },
       {
         "node": "ground",
-        "model": "trace_disabled",
+        "model": "offline",
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "usd": 0.0
@@ -585,21 +691,20 @@
         "usd": 0.0
       },
       {
-        "node": "market_brief",
-        "model": "gpt-4o-mini",
-        "prompt_tokens": 400,
-        "completion_tokens": 80,
-        "usd": 0.00011
+        "node": "write",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       },
       {
-        "node": "write",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 1552,
-        "completion_tokens": 243,
-        "usd": 0.0002281
+        "node": "critique",
+        "model": "offline",
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "usd": 0.0
       }
     ],
-    "terminal_reason": null,
     "errors": [
       {
         "node": "ground",
@@ -609,55 +714,11 @@
       }
     ],
     "degradation_reasons": [
-      "No local market template was available; drafted from stories only."
-    ]
-  },
-  {
-    "id": "out-of-scope",
-    "kind": "fallback",
-    "expected": "fallback",
-    "actual": "fallback",
-    "passed": true,
-    "latency_seconds": 2.0766,
-    "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": null,
-    "cost_events": [
-      {
-        "node": "intake_router",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 79,
-        "completion_tokens": 64,
-        "usd": 2.71e-05
-      }
+      "Personal memory is unavailable; continuing without profile context.",
+      "No local market template was available; drafted from stories only.",
+      "AGENT_OFFLINE is set; skipping live market intel."
     ],
-    "terminal_reason": "Out of scope: this agent only prepares grounded LinkedIn drafts and comments.",
-    "errors": [],
-    "degradation_reasons": []
-  },
-  {
-    "id": "ambiguous",
-    "kind": "escalate",
-    "expected": "escalate",
-    "actual": "escalate",
-    "passed": true,
-    "latency_seconds": 2.3626,
-    "revisions": 0,
-    "unmatched": [],
-    "unmatched_context": [],
-    "poison_mechanism": null,
-    "cost_events": [
-      {
-        "node": "intake_router",
-        "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
-        "prompt_tokens": 76,
-        "completion_tokens": 83,
-        "usd": 3.25e-05
-      }
-    ],
-    "terminal_reason": "Escalated for human review.",
-    "errors": [],
-    "degradation_reasons": []
+    "note": "The deterministic detector does not extract verbal quantities yet; exclude this case from measured recall until a second advisory detector is added.",
+    "passed": true
   }
 ]

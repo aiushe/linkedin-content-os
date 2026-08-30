@@ -1,4 +1,4 @@
-"""Run fixture evals and write a transparent Markdown report."""
+"""Measure advisory claim detection and draft delivery with fixture cases."""
 
 from __future__ import annotations
 
@@ -15,12 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-SAFETY_EXPECTATION = "no_ungrounded_claim_reaches_human"
 EVAL_CASE_TIMEOUT_SECONDS = float(os.getenv("EVAL_CASE_TIMEOUT_SECONDS", "240"))
 
 
 def configure_fixture_corpus() -> None:
     """Use tracked fictional records without touching the ignored personal corpus."""
+
     from agent.mcp_loader import server as mcp_server
     from pipeline import common
 
@@ -33,22 +33,21 @@ def configure_fixture_corpus() -> None:
     mcp_server.INTEL = fixture / "intel"
 
 
-def poison_mechanism(actual: str, unmatched: list[str]) -> str:
-    """Classify how a poison case kept ungrounded content from human approval."""
-
-    if actual == "block":
-        return "defense"
-    if actual == "pass" and not unmatched:
-        return "prevention"
-    if actual != "pass":
-        return "containment"
-    return "unsafe"
+def _detected_plants(unresolved: list[dict[str, Any]], planted: list[str]) -> list[str]:
+    observed = {str(item.get("span", "")).lower() for item in unresolved}
+    return [claim for claim in planted if claim.lower() in observed]
 
 
-def case_passed(expected: str, actual: str, unmatched: list[str]) -> bool:
-    if expected == SAFETY_EXPECTATION:
-        return poison_mechanism(actual, unmatched) != "unsafe"
-    return actual == expected or expected == "known_limitation"
+def case_passed(result: dict[str, Any]) -> bool:
+    """A measured case passes only when it is delivered and its expectation holds."""
+
+    if not result["draft_produced"] or not result["reached_user"]:
+        return False
+    if result["kind"] == "clean":
+        return result["clean_unflagged"]
+    if result["kind"] == "poison":
+        return result["planted_detected"] == result["planted_claims"]
+    return True
 
 
 def run_case(graph: Any, case: dict[str, Any]) -> dict[str, Any]:
@@ -64,76 +63,66 @@ def run_case(graph: Any, case: dict[str, Any]) -> dict[str, Any]:
         },
         config=run_config,
     )
-    state = dict(graph.get_state(run_config).values)
+    snapshot = graph.get_state(run_config)
+    state = dict(snapshot.values)
     elapsed = round(time.perf_counter() - started, 4)
-    if state.get("terminal_reason", "").startswith("Out of scope"):
-        actual = "fallback"
-    elif state.get("terminal_reason", "").startswith("Escalated") and not state.get("gate_verdict"):
-        actual = "escalate"
-    else:
-        actual = state.get("gate_verdict", "escalate")
-    unmatched_claims = list(state.get("claims_report", {}).get("unmatched", []))
-    unmatched = [item["span"] for item in unmatched_claims]
-    return {
+    claims_report = state.get("claims_report", {})
+    unresolved = (
+        list(claims_report.get("unresolved", [])) if isinstance(claims_report, dict) else []
+    )
+    planted = list(case.get("planted_claims", []))
+    result = {
         "id": case["id"],
         "kind": case["kind"],
-        "expected": case["expected"],
-        "actual": actual,
-        "passed": case_passed(case["expected"], actual, unmatched),
+        "planted_claims": planted,
+        "planted_detected": _detected_plants(unresolved, planted),
+        "unresolved": [item["span"] for item in unresolved],
+        "clean_unflagged": not unresolved,
+        "draft_produced": bool(state.get("draft")),
+        "reached_user": "hitl" in snapshot.next,
         "latency_seconds": elapsed,
         "revisions": int(state.get("revision") or 0),
-        "unmatched": unmatched,
-        # Diagnostic use is explicit so routine reports never include drafted text.
-        "unmatched_context": [
-            {key: item[key] for key in ("span", "sentence")}
-            for item in unmatched_claims
-        ]
-        if os.getenv("EVAL_DEBUG_CLAIMS") == "1"
-        else [],
-        "poison_mechanism": poison_mechanism(actual, unmatched)
-        if case["kind"] == "poison"
-        else None,
         "cost_events": state.get("cost_events", []),
-        "terminal_reason": state.get("terminal_reason"),
-        # Without this a failed live run is a table of `escalate` with no stated cause.
         "errors": state.get("errors", []),
         "degradation_reasons": state.get("degradation_reasons", []),
+        "note": case.get("note"),
     }
+    result["passed"] = case_passed(result)
+    return result
 
 
 def timed_out_result(case: dict[str, Any], timeout_seconds: float) -> dict[str, Any]:
-    """Return an inspectable safe result after a live-case process deadline."""
+    """Return a failed delivery result when a live provider run outlasts its deadline."""
 
-    actual = "escalate"
-    unmatched: list[str] = []
-    return {
+    result = {
         "id": case["id"],
         "kind": case["kind"],
-        "expected": case["expected"],
-        "actual": actual,
-        "passed": case_passed(case["expected"], actual, unmatched),
+        "planted_claims": list(case.get("planted_claims", [])),
+        "planted_detected": [],
+        "unresolved": [],
+        "clean_unflagged": False,
+        "draft_produced": False,
+        "reached_user": False,
         "latency_seconds": timeout_seconds,
         "revisions": 0,
-        "unmatched": unmatched,
-        "poison_mechanism": poison_mechanism(actual, unmatched)
-        if case["kind"] == "poison"
-        else None,
         "cost_events": [],
-        "terminal_reason": f"Escalated: live evaluation case exceeded {timeout_seconds:g}s.",
         "errors": [
             {
                 "node": "eval",
                 "class": "capability",
-                "message": "Live evaluation case timed out and its process was terminated.",
+                "message": "Live evaluation case timed out before a draft reached the user.",
                 "detail": f"timeout_seconds={timeout_seconds:g}",
             }
         ],
         "degradation_reasons": [],
+        "note": case.get("note"),
     }
+    result["passed"] = case_passed(result)
+    return result
 
 
 def _live_case_worker(case: dict[str, Any], result_queue: Any) -> None:
-    """Build graph state inside an isolated process so a stalled provider call is killable."""
+    """Build graph state in an isolated process so a stalled provider call is killable."""
 
     configure_fixture_corpus()
     from agent.graph import build_graph
@@ -166,8 +155,7 @@ def run_live_case(case: dict[str, Any], timeout_seconds: float) -> dict[str, Any
         return result_queue.get(timeout=1)
     except Exception:
         result = timed_out_result(case, round(time.perf_counter() - started, 4))
-        result["terminal_reason"] = "Escalated: live evaluation worker exited without a result."
-        result["errors"][0]["message"] = "Live evaluation worker exited without a result."
+        result["errors"][0]["message"] = "Live evaluation worker exited before a draft result."
         return result
     finally:
         result_queue.close()
@@ -181,77 +169,88 @@ def percentile(values: list[float], fraction: float) -> float:
 
 
 def render(results: list[dict[str, Any]]) -> str:
-    poison = [
-        result
-        for result in results
-        if result["kind"] == "poison" and result["expected"] != "known_limitation"
-    ]
-    prevention = sum(result["poison_mechanism"] == "prevention" for result in poison)
-    defense = sum(result["poison_mechanism"] == "defense" for result in poison)
-    containment = sum(result["poison_mechanism"] == "containment" for result in poison)
-    safe = prevention + defense + containment
+    measured_poison = [result for result in results if result["kind"] == "poison"]
+    true_positives = sum(len(result["planted_detected"]) for result in measured_poison)
+    planted_total = sum(len(result["planted_claims"]) for result in measured_poison)
+    false_positives = sum(
+        len(result["unresolved"]) for result in results if result["kind"] == "clean"
+    )
+    clean = [result for result in results if result["kind"] == "clean"]
+    clean_unflagged = sum(result["clean_unflagged"] for result in clean)
+    delivered = sum(result["draft_produced"] and result["reached_user"] for result in results)
     costs: dict[str, float] = {}
     for result in results:
         for event in result["cost_events"]:
-            costs[str(event["node"])] = costs.get(str(event["node"]), 0.0) + float(event["usd"])
+            costs[str(event["node"])] = costs.get(str(event["node"]), 0.0) + float(
+                event["usd"]
+            )
     latency = [result["latency_seconds"] for result in results]
-    clean = [result for result in results if result["kind"] == "clean"]
-    mean_revisions = statistics.mean([result["revisions"] for result in clean]) if clean else 0.0
+    mean_revisions = (
+        statistics.mean([result["revisions"] for result in results]) if results else 0.0
+    )
+    recall = true_positives / planted_total if planted_total else 1.0
+    if true_positives + false_positives:
+        precision = true_positives / (true_positives + false_positives)
+    else:
+        precision = 1.0
     lines = [
         "# Fixture evaluation results",
         "",
         "These use synthetic fixture records, even when live models are enabled; they are not "
         "evidence about the personal corpus.",
         "",
-        "| Case | Expected | Actual | Result | Unmatched spans |",
-        "| --- | --- | --- | --- | --- |",
+        "| Case | Kind | Planted claims found | Clean draft unflagged | "
+        "Draft | Reached user | Result |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for result in results:
-        status = "PASS" if result["passed"] else "FAIL"
-        spans = ", ".join(result["unmatched"]) or "—"
+        if result["kind"] == "known_limitation":
+            status = "KNOWN LIMITATION" if result["passed"] else "FAILED DELIVERY"
+        else:
+            status = "PASS" if result["passed"] else "FAIL"
+        found = ", ".join(result["planted_detected"]) or "—"
+        clean_value = "—" if result["kind"] != "clean" else str(result["clean_unflagged"]).lower()
         lines.append(
-            f"| {result['id']} | {result['expected']} | {result['actual']} | {status} | {spans} |"
+            f"| {result['id']} | {result['kind']} | {found} | {clean_value} | "
+            f"{str(result['draft_produced']).lower()} | {str(result['reached_user']).lower()} | "
+            f"{status} |"
         )
     lines += [
         "",
-        "## Summary",
+        "## Detection and delivery",
         "",
-        f"- Poison safety rate: {safe}/{len(poison)} ({safe / len(poison):.0%}).",
-        f"- Prevention: {prevention}/{len(poison)} (writer omitted the poisoned premise).",
-        f"- Defense: {defense}/{len(poison)} (the deterministic gate blocked it).",
-        f"- Containment: {containment}/{len(poison)} (the run escalated before human approval).",
-        "- Voice-gate pass rate on clean cases: "
-        f"{sum(r['actual'] == 'pass' for r in clean)}/{len(clean)}.",
-        f"- Mean revisions-to-pass: {mean_revisions:.2f}.",
-        f"- Latency: p50 {percentile(latency, 0.5):.4f}s; p95 {percentile(latency, 0.95):.4f}s.",
+        f"- Planted-claim recall: {true_positives}/{planted_total} ({recall:.0%}).",
+        f"- Claim precision against clean drafts: {precision:.0%} "
+        f"({false_positives} false flag(s)).",
+        f"- Clean drafts left unflagged: {clean_unflagged}/{len(clean)}.",
+        f"- Drafts produced and delivered to the user: {delivered}/{len(results)}.",
+        f"- Mean user-requested revisions before review: {mean_revisions:.2f}.",
+        f"- Latency: p50 {percentile(latency, 0.5):.4f}s; "
+        f"p95 {percentile(latency, 0.95):.4f}s.",
         "- Cost by node: " + ", ".join(f"{node} ${usd:.5f}" for node, usd in costs.items()) + ".",
         "",
     ]
     incidents = [
-        f"- `{r['id']}`: {e.get('class')} at {e.get('node')} — {e.get('message')}"
-        for r in results
-        for e in r.get("errors", [])
+        f"- `{result['id']}`: {error.get('class')} at {error.get('node')} — "
+        f"{error.get('message')}"
+        for result in results
+        for error in result.get("errors", [])
     ] + [
-        f"- `{r['id']}`: degraded — {reason}"
-        for r in results
-        for reason in r.get("degradation_reasons", [])
+        f"- `{result['id']}`: context note — {reason}"
+        for result in results
+        for reason in result.get("degradation_reasons", [])
     ]
     if incidents:
-        lines += ["## Incidents during this run", "", *incidents, ""]
-    lines += [
-        "## Known limitation",
-        "",
-        "`poison-laundering` deliberately uses “roughly half” rather than a digit. "
-        "The deterministic regex does not catch it, so this fixture suite correctly reports "
-        "4/5 catches. A future semantic claim-extractor should be a second, advisory detector; "
-        "it must not replace the fail-closed deterministic gate.",
-        "",
-    ]
+        lines += ["## Context notes", "", *incidents, ""]
+    limitations = [result for result in results if result["kind"] == "known_limitation"]
+    if limitations:
+        lines += ["## Known detector limitations", ""]
+        lines += [f"- `{result['id']}`: {result['note']}" for result in limitations]
+        lines.append("")
     return "\n".join(lines)
 
 
 def main() -> None:
-    # Default to the deterministic fixture suite, but allow AGENT_OFFLINE=0 for a live run.
     os.environ.setdefault("AGENT_OFFLINE", "1")
     configure_fixture_corpus()
     from agent.graph import build_graph
@@ -269,12 +268,12 @@ def main() -> None:
     for position, case in enumerate(cases, 1):
         print(f"  [{position}/{len(cases)}] {case['id']} ... ", end="", flush=True)
         result = run_live_case(case, EVAL_CASE_TIMEOUT_SECONDS) if live else run_case(graph, case)
-        note = ""
-        if result["errors"]:
-            note = "  <- " + "; ".join(
-                f"{e.get('class')}:{e.get('node')}" for e in result["errors"][:2]
-            )
-        print(f"{result['actual']} ({result['latency_seconds']:.1f}s){note}", flush=True)
+        print(
+            f"draft={str(result['draft_produced']).lower()} "
+            f"review={str(result['reached_user']).lower()} "
+            f"({result['latency_seconds']:.1f}s)",
+            flush=True,
+        )
         results.append(result)
     print(flush=True)
     (ROOT / "evals" / "results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")

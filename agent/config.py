@@ -28,7 +28,6 @@ VOICE_SHORT_POST_EXCLUDED_FEATURES = frozenset(
     ).split(",")
     if feature.strip()
 )
-MAX_REVISIONS = int(os.getenv("MAX_REVISIONS", "3"))
 CLAIM_REQUIRE_EXACT = os.getenv("CLAIM_REQUIRE_EXACT", "true").lower() in {"1", "true", "yes"}
 
 # Any OpenAI-compatible endpoint works here: OpenAI (default), Nebius Token Factory,
@@ -56,8 +55,7 @@ MODEL_CRITIC = os.getenv("MODEL_CRITIC", "gpt-4o-mini")
 WRITER_TEMPERATURE = float(os.getenv("WRITER_TEMPERATURE", "0"))
 _llm_seed = os.getenv("LLM_SEED", "").strip()
 LLM_SEED = int(_llm_seed) if _llm_seed else None
-# Bound each provider request. A timeout escalates the run; it must never leave a paid
-# inference request waiting indefinitely.
+# Bound each provider request so an unavailable provider becomes a visible availability note.
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
 LLM_HARD_TIMEOUT_SECONDS = float(os.getenv("LLM_HARD_TIMEOUT_SECONDS", "240"))
 

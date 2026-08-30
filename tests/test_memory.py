@@ -139,7 +139,9 @@ def test_mem0_enabled_false_disables_memory_before_any_client_call(monkeypatch):
 
     result = memory_node.recall_profile_memory({})
 
-    assert result == {"profile_memory": [], "profile_memory_status": "disabled"}
+    assert result["profile_memory"] == []
+    assert result["profile_memory_status"] == "unavailable"
+    assert result["degradation_reasons"]
 
 
 @pytest.mark.parametrize(

@@ -10,17 +10,21 @@ from agent.state import DraftState
 def recall_profile_memory(_: DraftState) -> dict:
     """Attach optional context without ever treating it as grounded evidence."""
 
-    if not config.MEM0_ENABLED:
-        return {"profile_memory": [], "profile_memory_status": "disabled"}
-    if not config.mem0_service_enabled():
-        return {"profile_memory": [], "profile_memory_status": "disabled"}
+    if not config.MEM0_ENABLED or not config.mem0_service_enabled():
+        return {
+            "profile_memory": [],
+            "profile_memory_status": "unavailable",
+            "degradation_reasons": [
+                "Personal memory is unavailable; continuing without profile context."
+            ],
+        }
     if not config.mem0_prompt_enabled():
         return {
             "profile_memory": [],
             "profile_memory_status": "withheld_for_langsmith_tracing",
             "degradation_reasons": [
-                "Personal memory was withheld because LangSmith tracing has not been approved "
-                "for it."
+                "Personal memory was withheld because LangSmith tracing has not been approved; "
+                "continuing without profile context."
             ],
         }
     try:

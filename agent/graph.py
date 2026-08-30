@@ -1,4 +1,4 @@
-"""LangGraph assembly for the human-gated content drafting workflow."""
+"""LangGraph assembly for the collaborative content drafting workflow."""
 
 from __future__ import annotations
 
@@ -10,17 +10,12 @@ from langgraph.graph import END, START, StateGraph
 
 from pipeline.claims import AllowedFact
 
-from . import config
 from .gates import gate as run_gate
 from .nodes.commit import commit
 from .nodes.critique import critique
-from .nodes.escalate import escalate
-from .nodes.fallback import fallback
 from .nodes.ground import ground
 from .nodes.hitl import hitl
 from .nodes.memory import recall_profile_memory
-from .nodes.outreach import outreach
-from .nodes.profile_rewrite import profile_rewrite
 from .nodes.router import intake_router
 from .nodes.write import write
 from .state import DraftState
@@ -37,94 +32,49 @@ def deterministic_gate(state: DraftState) -> dict:
         "confidential_report": asdict(report.confidential),
         "gate_verdict": report.verdict,
     }
-    if report.verdict == "block":
-        spans = [claim.span for claim in report.claims.unmatched]
-        update["errors"] = [
-            {
-                "node": "gate",
-                "class": "integrity",
-                "message": "Draft contains a factual claim that cannot be grounded.",
-                "detail": ", ".join(spans),
-            }
-        ]
-        if report.confidential.verdict == "block":
-            update["errors"].append(
-                {
-                    "node": "gate",
-                    "class": "integrity",
-                    "message": "Draft contains configured confidential term(s).",
-                    "detail": ", ".join(report.confidential.matched_terms),
-                }
-            )
-    elif report.verdict == "indeterminate":
-        confidential_reason = report.confidential.reason
-        update["errors"] = [
-            {
-                "node": "gate",
-                "class": "capability",
-                "message": (
-                    "The gate lacks a viable voice fingerprint, factual allowlist, or "
-                    "confidential-term list."
-                ),
-                "detail": confidential_reason,
-            }
-        ]
     return update
 
 
-def _route_after_router(
-    state: DraftState,
-) -> Literal["ground", "fallback", "profile_rewrite", "outreach", "escalate"]:
-    if float(state.get("intent_confidence") or 0) < config.ROUTER_CONFIDENCE_FLOOR:
-        return "escalate"
-    if state.get("intent") == "out_of_scope":
-        return "fallback"
-    if state.get("intent") == "profile_rewrite":
-        return "profile_rewrite"
-    if state.get("intent") == "outreach":
-        return "outreach"
+def _route_after_router(_: DraftState) -> Literal["ground"]:
+    """Every request reaches drafting; the router only supplies a suggested format."""
+
     return "ground"
 
 
-def _route_after_ground(state: DraftState) -> Literal["write", "escalate"]:
-    if any(error.get("class") == "capability" for error in state.get("errors", [])):
-        return "escalate"
+def _route_after_ground(_: DraftState) -> Literal["write"]:
     return "write"
 
 
-def _route_after_write(state: DraftState) -> Literal["gate", "escalate"]:
-    """A writer-model outage must escalate, never flow a placeholder into the gate."""
-
-    for error in state.get("errors", []):
-        if error.get("node") == "write" and error.get("class") == "capability":
-            return "escalate"
+def _route_after_write(_: DraftState) -> Literal["gate"]:
     return "gate"
 
 
-def _route_after_gate(state: DraftState) -> Literal["hitl", "critique", "escalate"]:
-    if state.get("gate_verdict") in {"pass", "block"}:
-        return "hitl"
-    if state.get("gate_verdict") == "revise":
-        return "critique"
-    return "escalate"
+def _route_after_gate(_: DraftState) -> Literal["critique"]:
+    """Compute readable observations once, then hand the draft to the user."""
+
+    return "critique"
 
 
-def _route_after_critique(state: DraftState) -> Literal["write", "escalate"]:
-    return "escalate" if int(state.get("revision") or 0) > config.MAX_REVISIONS else "write"
+def _route_after_critique(_: DraftState) -> Literal["hitl"]:
+    """Computed critique is a report, not an automatic revision instruction."""
+
+    return "hitl"
 
 
 def _route_after_hitl(
     state: DraftState,
-) -> Literal["commit", "gate", "write", "escalate", "hitl", "end"]:
+) -> Literal["commit", "gate", "write", "hitl", "end"]:
     decision = state.get("decision")
     if decision == "approve":
         return "commit"
     if decision == "edit":
         return "gate"
+    if decision == "source":
+        return "gate"
+    if decision == "feedback":
+        return "write"
     if decision == "retry":
         return "write"
-    if decision == "escalate":
-        return "escalate"
     if decision == "annotate":
         return "hitl"
     return "end"
@@ -137,15 +87,11 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     workflow.add_node("profile_memory", recall_profile_memory)
     workflow.add_node("intake_router", intake_router)
     workflow.add_node("ground", ground)
-    workflow.add_node("profile_rewrite", profile_rewrite)
-    workflow.add_node("outreach", outreach)
     workflow.add_node("write", write)
     workflow.add_node("gate", deterministic_gate)
     workflow.add_node("critique", critique)
     workflow.add_node("hitl", hitl)
     workflow.add_node("commit", commit)
-    workflow.add_node("fallback", fallback)
-    workflow.add_node("escalate", escalate)
     workflow.add_edge(START, "profile_memory")
     workflow.add_edge("profile_memory", "intake_router")
     workflow.add_conditional_edges(
@@ -153,25 +99,21 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
         _route_after_router,
         {
             "ground": "ground",
-            "fallback": "fallback",
-            "profile_rewrite": "profile_rewrite",
-            "outreach": "outreach",
-            "escalate": "escalate",
         },
     )
     workflow.add_conditional_edges(
-        "ground", _route_after_ground, {"write": "write", "escalate": "escalate"}
+        "ground", _route_after_ground, {"write": "write"}
     )
     workflow.add_conditional_edges(
-        "write", _route_after_write, {"gate": "gate", "escalate": "escalate"}
+        "write", _route_after_write, {"gate": "gate"}
     )
     workflow.add_conditional_edges(
         "gate",
         _route_after_gate,
-        {"hitl": "hitl", "critique": "critique", "escalate": "escalate"},
+        {"critique": "critique"},
     )
     workflow.add_conditional_edges(
-        "critique", _route_after_critique, {"write": "write", "escalate": "escalate"}
+        "critique", _route_after_critique, {"hitl": "hitl"}
     )
     workflow.add_conditional_edges(
         "hitl",
@@ -180,14 +122,9 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
             "commit": "commit",
             "gate": "gate",
             "write": "write",
-            "escalate": "escalate",
             "hitl": "hitl",
             "end": END,
         },
     )
     workflow.add_edge("commit", END)
-    workflow.add_edge("fallback", END)
-    workflow.add_edge("profile_rewrite", END)
-    workflow.add_edge("outreach", END)
-    workflow.add_edge("escalate", END)
     return workflow.compile(checkpointer=checkpointer or MemorySaver())

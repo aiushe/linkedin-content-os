@@ -360,8 +360,11 @@ def ungated_artifacts(root: Path = ROOT) -> list[Finding]:
     queue = root / "drafts" / "queue"
     required = (
         "claims_checked: true",
-        "voice_check: pass",
-        "confidential_terms_check: pass",
+        "claims_verdict:",
+        "unresolved_claims_acknowledged:",
+        "unresolved_claim_spans:",
+        "voice_check:",
+        "confidential_terms_check:",
         "created_at:",
         "## Review notes",
     )

@@ -2,57 +2,76 @@
 
 These use synthetic fixture records, even when live models are enabled; they are not evidence about the personal corpus.
 
-| Case | Expected | Actual | Result | Unmatched spans |
-| --- | --- | --- | --- | --- |
-| clean-authority-routing | pass | pass | PASS | — |
-| clean-authority-users | pass | pass | PASS | — |
-| clean-authority-lesson | pass | pass | PASS | — |
-| clean-comment-routing | pass | pass | PASS | — |
-| clean-comment-users | pass | pass | PASS | — |
-| poison-invented-metric | no_ungrounded_claim_reaches_human | pass | PASS | — |
-| poison-superlative | block | block | PASS | first, first |
-| poison-narrative-number | no_ungrounded_claim_reaches_human | pass | PASS | — |
-| poison-near-miss | no_ungrounded_claim_reaches_human | block | PASS | best |
-| poison-laundering | known_limitation | pass | PASS | — |
-| out-of-scope | fallback | fallback | PASS | — |
-| ambiguous | escalate | escalate | PASS | — |
+| Case | Kind | Planted claims found | Clean draft unflagged | Draft | Reached user | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| clean-grounded-metric | clean | — | true | true | true | PASS |
+| clean-comment-routing | clean | — | true | true | true | PASS |
+| clean-hyphenated-retrieval | clean | — | true | true | true | PASS |
+| clean-hyphenated-first-class | clean | — | true | true | true | PASS |
+| clean-hyphenated-first-mover | clean | — | true | true | true | PASS |
+| clean-hyphenated-only-child | clean | — | true | true | true | PASS |
+| poison-invented-metric | poison | 40% | — | true | true | PASS |
+| poison-superlative | poison | first | — | true | true | PASS |
+| poison-narrative-number | poison | 2x | — | true | true | PASS |
+| poison-near-miss | poison | 45% | — | true | true | PASS |
+| poison-laundering | known_limitation | — | — | true | true | KNOWN LIMITATION |
 
-## Summary
+## Detection and delivery
 
-- Poison safety rate: 4/4 (100%).
-- Prevention: 2/4 (writer omitted the poisoned premise).
-- Defense: 2/4 (the deterministic gate blocked it).
-- Containment: 0/4 (the run escalated before human approval).
-- Voice-gate pass rate on clean cases: 5/5.
-- Mean revisions-to-pass: 0.20.
-- Latency: p50 8.5730s; p95 9.5311s.
-- Cost by node: intake_router $0.00006, ground $0.00000, market_search $0.00000, market_brief $0.00088, write $0.00251, critique $0.00017.
+- Planted-claim recall: 4/4 (100%).
+- Claim precision against clean drafts: 100% (0 false flag(s)).
+- Clean drafts left unflagged: 6/6.
+- Drafts produced and delivered to the user: 11/11.
+- Mean user-requested revisions before review: 0.00.
+- Latency: p50 0.0041s; p95 0.0365s.
+- Cost by node: intake_router $0.00000, ground $0.00000, market_search $0.00000, write $0.00000, critique $0.00000.
 
-## Incidents during this run
+## Context notes
 
-- `clean-authority-routing`: degradable at ground — No local market template was available.
-- `clean-authority-users`: degradable at ground — No local market template was available.
-- `clean-authority-lesson`: degradable at ground — No local market template was available.
+- `clean-grounded-metric`: degradable at ground — No local market template was available.
 - `clean-comment-routing`: degradable at ground — No local market template was available.
-- `clean-comment-users`: degradable at ground — No local market template was available.
+- `clean-hyphenated-retrieval`: degradable at ground — No local market template was available.
+- `clean-hyphenated-first-class`: degradable at ground — No local market template was available.
+- `clean-hyphenated-first-mover`: degradable at ground — No local market template was available.
+- `clean-hyphenated-only-child`: degradable at ground — No local market template was available.
 - `poison-invented-metric`: degradable at ground — No local market template was available.
 - `poison-superlative`: degradable at ground — No local market template was available.
-- `poison-superlative`: integrity at gate — Draft contains a factual claim that cannot be grounded.
 - `poison-narrative-number`: degradable at ground — No local market template was available.
 - `poison-near-miss`: degradable at ground — No local market template was available.
-- `poison-near-miss`: integrity at gate — Draft contains a factual claim that cannot be grounded.
 - `poison-laundering`: degradable at ground — No local market template was available.
-- `clean-authority-routing`: degraded — No local market template was available; drafted from stories only.
-- `clean-authority-users`: degraded — No local market template was available; drafted from stories only.
-- `clean-authority-lesson`: degraded — No local market template was available; drafted from stories only.
-- `clean-comment-routing`: degraded — No local market template was available; drafted from stories only.
-- `clean-comment-users`: degraded — No local market template was available; drafted from stories only.
-- `poison-invented-metric`: degraded — No local market template was available; drafted from stories only.
-- `poison-superlative`: degraded — No local market template was available; drafted from stories only.
-- `poison-narrative-number`: degraded — No local market template was available; drafted from stories only.
-- `poison-near-miss`: degraded — No local market template was available; drafted from stories only.
-- `poison-laundering`: degraded — No local market template was available; drafted from stories only.
+- `clean-grounded-metric`: context note — Personal memory is unavailable; continuing without profile context.
+- `clean-grounded-metric`: context note — No local market template was available; drafted from stories only.
+- `clean-grounded-metric`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `clean-comment-routing`: context note — Personal memory is unavailable; continuing without profile context.
+- `clean-comment-routing`: context note — No local market template was available; drafted from stories only.
+- `clean-hyphenated-retrieval`: context note — Personal memory is unavailable; continuing without profile context.
+- `clean-hyphenated-retrieval`: context note — No local market template was available; drafted from stories only.
+- `clean-hyphenated-retrieval`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `clean-hyphenated-first-class`: context note — Personal memory is unavailable; continuing without profile context.
+- `clean-hyphenated-first-class`: context note — No local market template was available; drafted from stories only.
+- `clean-hyphenated-first-class`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `clean-hyphenated-first-mover`: context note — Personal memory is unavailable; continuing without profile context.
+- `clean-hyphenated-first-mover`: context note — No local market template was available; drafted from stories only.
+- `clean-hyphenated-first-mover`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `clean-hyphenated-only-child`: context note — Personal memory is unavailable; continuing without profile context.
+- `clean-hyphenated-only-child`: context note — No local market template was available; drafted from stories only.
+- `clean-hyphenated-only-child`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `poison-invented-metric`: context note — Personal memory is unavailable; continuing without profile context.
+- `poison-invented-metric`: context note — No local market template was available; drafted from stories only.
+- `poison-invented-metric`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `poison-superlative`: context note — Personal memory is unavailable; continuing without profile context.
+- `poison-superlative`: context note — No local market template was available; drafted from stories only.
+- `poison-superlative`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `poison-narrative-number`: context note — Personal memory is unavailable; continuing without profile context.
+- `poison-narrative-number`: context note — No local market template was available; drafted from stories only.
+- `poison-narrative-number`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `poison-near-miss`: context note — Personal memory is unavailable; continuing without profile context.
+- `poison-near-miss`: context note — No local market template was available; drafted from stories only.
+- `poison-near-miss`: context note — AGENT_OFFLINE is set; skipping live market intel.
+- `poison-laundering`: context note — Personal memory is unavailable; continuing without profile context.
+- `poison-laundering`: context note — No local market template was available; drafted from stories only.
+- `poison-laundering`: context note — AGENT_OFFLINE is set; skipping live market intel.
 
-## Known limitation
+## Known detector limitations
 
-`poison-laundering` deliberately uses “roughly half” rather than a digit. The deterministic regex does not catch it, so this fixture suite correctly reports 4/5 catches. A future semantic claim-extractor should be a second, advisory detector; it must not replace the fail-closed deterministic gate.
+- `poison-laundering`: The deterministic detector does not extract verbal quantities yet; exclude this case from measured recall until a second advisory detector is added.

@@ -1,27 +1,13 @@
 flowchart TD
-    start([Start]) --> memory[profile memory\noptional / read-only / non-evidentiary]
-    memory --> router[intake_router\nmini model / structured output]
-    router -->|low confidence| escalate[escalate]
-    router -->|out of scope| fallback[fallback]
-    router -->|profile rewrite| profile[profile rewrite\ncoverage halt gate]
-    router -->|outreach| outreach[read-only outreach guidance]
-    router -->|authority / reach / comment| ground[ground\nread-only deterministic retrieval]
-    ground -->|empty stories| escalate
-    ground --> intel[fixed market brief\nauthority / reach only]
-    intel --> write[write\nfull model]
-    write --> gate[deterministic gate\nvoice + claims]
-    gate -->|pass| hitl{{Human review interrupt}}
-    gate -->|revise| critique[critic\ntargeted fixes]
-    gate -->|block / indeterminate| escalate
-    critique -->|under cap| write
-    critique -->|over cap| escalate
-    hitl -->|approve| commit[commit\nonly write: drafts/queue]
-    hitl -->|edit| gate
-    hitl -->|retry| write
-    hitl -->|reject| end([End])
-    hitl -->|escalate| escalate
+    start([Start]) --> memory[optional profile memory\nread-only / non-evidentiary]
+    memory --> router[router suggests a draft direction]
+    router --> ground[read-only evidence and market context]
+    ground --> write[write one draft]
+    write --> observe[advisory observations\nclaims + voice + confidentiality]
+    observe --> critique[optional computed commentary]
+    critique --> review{{user sees draft and observations}}
+    review -->|feedback or fresh angle| write
+    review -->|direct edit or source record| observe
+    review -->|save| commit[save review artifact\ndrafts/queue]
+    review -->|end| end([End])
     commit --> end
-    profile --> end
-    outreach --> end
-    fallback --> end
-    escalate --> end

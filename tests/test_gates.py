@@ -2,10 +2,10 @@ from agent import gates
 from pipeline.claims import AllowedFact
 
 
-def test_safe_voice_score_fails_closed_when_fingerprint_empty(monkeypatch):
+def test_safe_voice_score_reports_when_fingerprint_empty(monkeypatch):
     monkeypatch.setattr(gates.voice, "load_fingerprint", lambda: {})
     result = gates.safe_voice_score("A simple draft.")
-    assert result["verdict"] == "indeterminate"
+    assert result["verdict"] == "warn"
 
 
 def test_safe_voice_score_deduplicates_tells(monkeypatch):
@@ -101,7 +101,7 @@ def test_short_post_keeps_first_person_rate_in_voice_scoring(monkeypatch):
     assert [flag["feature"] for flag in result["flags"]] == ["first_person_rate"]
 
 
-def test_claim_block_dominates_voice_indeterminate(monkeypatch):
+def test_claim_warning_and_missing_voice_profile_stay_advisory(monkeypatch):
     monkeypatch.setattr(gates.voice, "load_fingerprint", lambda: {})
     report = gates.gate(
         "I improved routing by 99%.",
@@ -115,12 +115,10 @@ def test_claim_block_dominates_voice_indeterminate(monkeypatch):
             )
         ],
     )
-    assert report.verdict == "block"
+    assert report.verdict == "warn"
 
 
 def test_reduce_verdicts_precedence():
-    assert gates.reduce_verdicts({"verdict": "revise"}, {"verdict": "block"}) == "block"
-    assert (
-        gates.reduce_verdicts({"verdict": "indeterminate"}, {"verdict": "pass"}) == "indeterminate"
-    )
+    assert gates.reduce_verdicts({"verdict": "revise"}, {"verdict": "warn"}) == "warn"
+    assert gates.reduce_verdicts({"verdict": "warn"}, {"verdict": "pass"}) == "warn"
     assert gates.reduce_verdicts({"verdict": "revise"}, {"verdict": "pass"}) == "revise"

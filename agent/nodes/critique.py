@@ -1,4 +1,4 @@
-"""Computed-rubric critique node, never a free-form quality judge."""
+"""Computed observations for the human reviewer, never an automatic editor."""
 
 from __future__ import annotations
 
@@ -13,9 +13,7 @@ from agent.state import DraftState
 
 
 class CritiqueOutput(BaseModel):
-    # Literal, not str: open models honour hard schema constraints but freely invent
-    # values for a bare `str` that only carries a description.
-    verdict: Literal["pass", "revise", "block", "indeterminate"]
+    verdict: Literal["pass", "warn", "revise"]
     reasons: list[str]
     targeted_fixes: list[str]
 
@@ -54,7 +52,7 @@ def _prompt(state: DraftState) -> str:
 
 
 def critique(state: DraftState) -> dict:
-    """Turn deterministic gate findings into specific writer instructions."""
+    """Turn deterministic findings into optional, human-visible observations."""
 
     meter = CostMeter(node="critique", model=config.MODEL_CRITIC)
     if config.live_models_enabled():
@@ -71,20 +69,7 @@ def critique(state: DraftState) -> dict:
     else:
         output = _computed_critique(state)
         event = meter.record(node="critique", model="offline")
-    revision = int(state.get("revision") or 0) + 1
-    errors = []
-    if revision > config.MAX_REVISIONS:
-        errors.append(
-            {
-                "node": "critique",
-                "class": "loop",
-                "message": "Revision cap reached without a passing deterministic gate.",
-                "detail": f"max_revisions={config.MAX_REVISIONS}",
-            }
-        )
     return {
         "critique": output.model_dump(),
-        "revision": revision,
         "cost_events": [event],
-        "errors": errors,
     }

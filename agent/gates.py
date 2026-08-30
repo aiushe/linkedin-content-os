@@ -1,4 +1,4 @@
-"""Deterministic fail-closed voice and factual gates with an advisory confidentiality check."""
+"""Deterministic advisory voice, factual, and confidentiality checks."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from pipeline import claims, confidential, voice
 
 from . import config
 
-VoiceVerdict = Literal["pass", "revise", "indeterminate"]
-GateVerdict = Literal["pass", "revise", "block", "indeterminate"]
+VoiceVerdict = Literal["pass", "revise", "warn"]
+GateVerdict = Literal["pass", "warn", "revise"]
 
 
 @dataclass
@@ -74,7 +74,7 @@ def _configured_flags(
 
 
 def safe_voice_score(draft: str, *, target_format: str = "short_post") -> dict[str, Any]:
-    """Score voice and refuse to pass when the fingerprint is not meaningful."""
+    """Score voice and report when the fingerprint is not meaningful."""
 
     profile = voice.load_fingerprint()
     result = dict(voice.score_text(draft, profile))
@@ -89,7 +89,7 @@ def safe_voice_score(draft: str, *, target_format: str = "short_post") -> dict[s
         or not profile.get("features")
     )
     if missing_profile:
-        verdict: VoiceVerdict = "indeterminate"
+        verdict: VoiceVerdict = "warn"
         reasons = [
             "Voice fingerprint is not ready: add at least "
             f"{config.VOICE_MIN_SAMPLES} samples and {config.VOICE_MIN_WORDS} words."
@@ -121,21 +121,19 @@ def safe_voice_score(draft: str, *, target_format: str = "short_post") -> dict[s
 
 def _verdict(value: Any) -> str:
     if isinstance(value, dict):
-        return str(value.get("verdict", "indeterminate"))
-    return str(getattr(value, "verdict", "indeterminate"))
+        return str(value.get("verdict", "warn"))
+    return str(getattr(value, "verdict", "warn"))
 
 
 def reduce_verdicts(
     voice_report: Any, claims_report: Any, confidential_report: Any | None = None
 ) -> GateVerdict:
-    """Reduce only blocking integrity verdicts; confidentiality findings are advisory."""
+    """Summarize voice readiness without letting any finding block a draft."""
 
     claim_verdict = _verdict(claims_report)
     voice_verdict = _verdict(voice_report)
-    if claim_verdict == "block":
-        return "block"
-    if claim_verdict == "indeterminate" or voice_verdict == "indeterminate":
-        return "indeterminate"
+    if claim_verdict == "warn" or voice_verdict == "warn":
+        return "warn"
     if voice_verdict == "revise":
         return "revise"
     return "pass"

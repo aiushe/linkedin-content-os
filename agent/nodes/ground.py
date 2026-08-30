@@ -92,7 +92,7 @@ def _market_cost_events(brief: Any) -> list[dict[str, Any]]:
 
 
 def ground(state: DraftState) -> dict:
-    """Retrieve stories and facts; empty intel degrades, empty stories escalates."""
+    """Retrieve stories and facts; missing context is reported, never terminal."""
 
     reasons: list[str] = []
     errors: list[dict[str, str]] = []
@@ -124,24 +124,18 @@ def ground(state: DraftState) -> dict:
         stories = []
         errors.append(failure.as_record(node="ground"))
     if not stories:
+        degraded = True
+        reasons.append(
+            "No grounded stories were available; drafting from the user’s own request only."
+        )
         errors.append(
             {
                 "node": "ground",
-                "class": FailureClass.CAPABILITY.value,
-                "message": "Story retrieval returned no grounded records.",
-                "detail": "Build the story index or add a story before drafting.",
+                "class": FailureClass.DEGRADABLE.value,
+                "message": "Story retrieval returned no grounded records; drafting continued.",
+                "detail": "Add stories or build the index to give later drafts more evidence.",
             }
         )
-        return {
-            "stories": [],
-            "allowlist": get_allowlist_read(),
-            "template": None,
-            "grounding_degraded": degraded,
-            "degradation_reasons": reasons,
-            "errors": errors,
-            "cost_events": cost_events,
-            "terminal_reason": "Capability failure: no story index.",
-        }
 
     allowlist = get_allowlist_read()
     template = None

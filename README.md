@@ -1,33 +1,32 @@
 # LinkedIn Content OS
 
-A local, human-gated LangGraph system for grounded LinkedIn drafting. It uses
-your ignored `private/` corpus for evidence and voice analysis, optional market
-intel for structural context, and deterministic voice, factual-claim, and
-confidential-terms gates.
-Nothing is published, messaged, or written to `drafts/queue/` without an
-`interrupt()` approval.
+LinkedIn Content OS is a local collaborative drafting tool. Give it a rough thought or draft;
+it creates one LinkedIn draft, shows what it could ground and what it could not, then lets you
+iterate in plain language. The checks are advisory. The user decides whether to revise, record a
+source, save, or stop.
 
-## Current capabilities
+## What it does
 
-- Routes authority, reach, comment, profile-rewrite, outreach, and out-of-scope
-  requests.
-- Loads authored role playbooks from `.claude/skills/` into writer and critique
-  prompts without allowing them to override factual evidence or a gate.
-- Stops profile rewriting if JD keyword coverage is below 0.75.
-- Provides read-only outreach guidance only after the user records that an
-  application was submitted; it never records an account or person automatically.
-- Uses Nebius Token Factory through its OpenAI-compatible API for live models.
-- Treats market intel as structural context, never as evidence for a factual claim.
-- Retrieves optional, user-approved Mem0 profile context at the start of a run without ingesting
-  the private corpus, drafts, or raw chat text.
+- Retrieves local verified stories and truth-table facts as evidence, with optional market context
+  for structure only.
+- Detects numeric, superlative, and attribution claims without weakening the detector; each
+  report includes the span, kind, sentence, and line number.
+- Reports voice differences and confidential-term matches as readable observations, never a
+  refusal or automatic revision.
+- Keeps prior drafts and every user direction in the writer context. Directions persist for a
+  conversation; a newer direction wins only when it conflicts with an older one.
+- Lets the user record a source with exact claim, proof, date, and verification text. That is the
+  only private-corpus write, and it appends only the entered values to the private truth table.
+- Saves any user-approved draft to `drafts/queue/`, including the claims, voice,
+  confidentiality, market, and degradation observations present at save time.
+
+Nothing publishes, sends a message, or writes personal information automatically.
 
 ## Quick start
 
-1. Install Python 3.12 and [uv](https://docs.astral.sh/uv), then run
-   `uv sync --extra dev`.
-2. Populate the ignored `private/` corpus from the tracked `corpus/` templates.
-   Never commit that material.
-3. Build the local indexes after corpus changes:
+1. Install Python 3.12 and [uv](https://docs.astral.sh/uv), then run `uv sync --extra dev`.
+2. Populate the ignored `private/` corpus from the tracked `corpus/` templates. Never commit it.
+3. Refresh local evidence after corpus changes:
 
    ```bash
    uv run python pipeline/index_corpus.py
@@ -36,45 +35,34 @@ Nothing is published, messaged, or written to `drafts/queue/` without an
    uv run python scripts/build_reports.py
    ```
 
-4. For live Nebius calls, configure local `.env` values for `LLM_BASE_URL`,
-   `LLM_API_KEY_ENV`, the corresponding API-key variable, and the selected
-   router, writer, and critic models. Keep all credentials out of tracked files.
-5. Optionally enable LangSmith dashboard traces with `LANGSMITH_TRACING=true`,
-   `LANGSMITH_API_KEY`, and `LANGSMITH_PROJECT`. Traces export prompts and
-   outputs to LangSmith, so enable them only with approval for that data flow.
-6. To enable persistent personal context, set `MEM0_API_KEY` and an opaque,
-   stable `MEM0_USER_ID`. Add only individually approved profile facts or writing
-   preferences in the app’s **Personal memory** panel. The graph retrieves them
-   with a static profile-context query; it never uploads `private/`, a raw idea,
-   or a draft to Mem0. If LangSmith tracing is on, memory is withheld from model
-   prompts until `MEM0_ALLOW_LANGSMITH_TRACING=true` is explicitly configured.
+4. Run the studio:
 
-## Verify and run
+   ```bash
+   uv run streamlit run app.py
+   ```
+
+For live models, configure `LLM_BASE_URL`, `LLM_API_KEY_ENV`, the corresponding key variable,
+and selected router/writer/critic models in your untracked `.env`.
+
+## Verify
 
 ```bash
 uv run pytest -q
-uv run ruff check agent pipeline evals tests scripts
-AGENT_OFFLINE=0 uv run python evals/run.py
-uv run streamlit run app.py --server.headless true
+uv run ruff check . --exclude .venv
+uv run python scripts/audit.py
+uv run python evals/run.py
 ```
 
-The tracked `tests/fixtures/dev_corpus/` is fictional. The evaluation reports
-prevention, deterministic-gate defense, and containment separately so a writer
-that declines to fabricate is not scored as a failure.
+The fixture evaluation reports planted-claim recall, precision on clean drafts (including
+hyphenated-compound cases), and draft delivery to the user. It does not report refusal-oriented
+safety or containment rates.
 
-## Safety boundary
+## Privacy and evidence boundaries
 
-All output is a review artifact. Only the human user publishes posts, makes
-comments, sends messages, or approves a queue write. See
-[architecture.md](docs/architecture.md) for the graph, failure policy, market
-intel boundary, and current configuration.
+`private/` is the ignored personal corpus; `corpus/` holds tracked templates; `intel/` contains
+disposable market research. Mem0 profile memory is optional, non-evidentiary context and never
+creates a claim or expands the allowlist. If LangSmith tracing is enabled, memory stays out of
+model prompts until separately approved with `MEM0_ALLOW_LANGSMITH_TRACING=true`.
 
-Mem0 memory is optional and non-evidentiary. It can provide framing and writing
-preferences, but cannot create a factual claim or expand the deterministic
-allowlist. The sidebar supports explicit add, replace, list, and permanent-delete
-operations; no memory write is automatic.
-
-Before queueing any real draft, create your own ignored
-`private/confidential-terms.md` from the tracked
-`corpus/identity/confidential-terms.md` template. The confidential-terms gate
-fails closed until that private list contains at least one term.
+See [architecture.md](docs/architecture.md) for the workflow, advisory observations, source
+recording, iteration behavior, and saved-draft provenance.

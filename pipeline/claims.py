@@ -1,4 +1,4 @@
-"""Fail-closed claim extraction and grounding checks.
+"""Advisory claim extraction and grounding checks.
 
 The module deliberately uses no model calls. It only permits numeric and
 superlative assertions that occur exactly in the verified truth table or a
@@ -17,7 +17,7 @@ from agent import config
 from . import common
 
 ClaimKind = Literal["numeric", "superlative", "attribution"]
-ClaimVerdict = Literal["pass", "block", "indeterminate"]
+ClaimVerdict = Literal["pass", "warn"]
 FactSource = Literal["truth_table", "story_metric"]
 
 
@@ -45,7 +45,12 @@ class ClaimsReport:
     matched: list[tuple[Claim, AllowedFact]]
     unmatched: list[Claim]
     narrative_only_hits: list[Claim]
+    unresolved: list[Claim]
     allowlist_size: int
+
+
+class TruthTableWriteError(ValueError):
+    """Raised when a human-submitted truth-table row cannot be stored verbatim."""
 
 
 TABLE_SEPARATOR_RE = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$")
@@ -203,6 +208,61 @@ def load_allowlist() -> list[AllowedFact]:
     return allowed
 
 
+def append_verified_truth_table_row(
+    claim: str, proof: str, date: str, verified: str, *, path: Path | None = None
+) -> AllowedFact:
+    """Append one human-entered verified row without changing any submitted field.
+
+    The caller must collect every field from the user. This function deliberately
+    rejects missing or table-breaking input instead of filling, normalizing, or
+    escaping it. Verification is also entered by the user, so every table-cell
+    value written into ``private/`` comes directly from the submission.
+    """
+
+    values = {"claim": claim, "proof": proof, "date": date, "verified": verified}
+    for label, value in values.items():
+        if not isinstance(value, str) or not value.strip():
+            raise TruthTableWriteError(f"Provide the {label}; it cannot be filled automatically.")
+        if "|" in value or "\n" in value or "\r" in value:
+            raise TruthTableWriteError(
+                f"Enter the {label} as one Markdown-table cell without pipes or line breaks."
+            )
+    destination = path or common.PRIVATE / "identity" / "truth-table.md"
+    if not destination.exists():
+        raise TruthTableWriteError(
+            "private/identity/truth-table.md is missing; create its structure yourself before "
+            "adding a verified row."
+        )
+    text = destination.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    table_end: int | None = None
+    for index, header_line in enumerate(lines[:-1]):
+        if "|" not in header_line or not TABLE_SEPARATOR_RE.match(lines[index + 1]):
+            continue
+        if "verified" not in [cell.lower() for cell in _cells(header_line)]:
+            continue
+        table_end = index + 2
+        while table_end < len(lines) and "|" in lines[table_end] and lines[table_end].strip():
+            table_end += 1
+        break
+    if table_end is None:
+        raise TruthTableWriteError(
+            "The private truth table has no Verified column, so no row was added."
+        )
+    if not _is_verified(verified):
+        raise TruthTableWriteError("Type yes to confirm this row is verified.")
+    row = f"| {claim} | {proof} | {date} | {verified} | |\n"
+    lines.insert(table_end, row)
+    destination.write_text("".join(lines), encoding="utf-8")
+    return AllowedFact(
+        claim=claim,
+        proof=proof,
+        period=date,
+        source="truth_table",
+        source_ref=_relative(destination),
+    )
+
+
 def _draft_lines(draft_body: str) -> list[tuple[int, str]]:
     """Remove frontmatter and review notes without altering source line numbers."""
 
@@ -296,9 +356,9 @@ def _matching_fact(claim: Claim, allowlist: list[AllowedFact]) -> AllowedFact | 
     """Return permitted evidence without ever accepting an approximate number.
 
     The default permits an exact extracted span (for example, ``30%``) only when
-    it occurs in verified evidence.  Setting ``CLAIM_REQUIRE_EXACT=false`` remains
-    fail-closed: it requires the entire verified fact to occur in the sentence,
-    which is useful for deliberately stricter local review rather than fuzzy match.
+    it occurs in verified evidence. Setting ``CLAIM_REQUIRE_EXACT=false`` still
+    requires the entire verified fact to occur in the sentence; it never uses a
+    fuzzy match.
     """
 
     if config.CLAIM_REQUIRE_EXACT:
@@ -322,7 +382,7 @@ def _matching_fact(claim: Claim, allowlist: list[AllowedFact]) -> AllowedFact | 
 
 
 def check(draft_body: str, allowlist: list[AllowedFact] | None = None) -> ClaimsReport:
-    """Return a fail-closed factual-grounding report for a draft body."""
+    """Return an advisory factual-grounding report for a draft body."""
 
     if allowlist is None:
         allowlist = load_allowlist()
@@ -336,15 +396,20 @@ def check(draft_body: str, allowlist: list[AllowedFact] | None = None) -> Claims
         fact = _matching_fact(claim, allowlist)
         if fact is not None:
             matched.append((claim, fact))
-        elif claim.kind in {"numeric", "superlative"}:
+        else:
             unmatched.append(claim)
         if _narrative_match(claim, narrative_only):
             narrative_hits.append(claim)
+    unresolved: list[Claim] = []
+    unresolved_seen: set[tuple[int, str, str]] = set()
+    for claim in [*unmatched, *narrative_hits]:
+        key = (claim.line_no, claim.span, claim.kind)
+        if key not in unresolved_seen:
+            unresolved.append(claim)
+            unresolved_seen.add(key)
     verdict: ClaimVerdict
-    if not allowlist:
-        verdict = "indeterminate"
-    elif unmatched or narrative_hits:
-        verdict = "block"
+    if not allowlist or unresolved:
+        verdict = "warn"
     else:
         verdict = "pass"
     return ClaimsReport(
@@ -353,5 +418,6 @@ def check(draft_body: str, allowlist: list[AllowedFact] | None = None) -> Claims
         matched=matched,
         unmatched=unmatched,
         narrative_only_hits=narrative_hits,
+        unresolved=unresolved,
         allowlist_size=len(allowlist),
     )

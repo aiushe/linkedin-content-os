@@ -32,7 +32,7 @@ def _brief(**overrides):
 
 
 def test_market_context_cannot_widen_the_factual_allowlist() -> None:
-    """The market's 40% is still blocked when it is absent from verified evidence."""
+    """The market's 40% is still surfaced when absent from verified evidence."""
 
     brief = _brief()
     assert "40%" in brief.exemplars[0]["hook"]
@@ -45,7 +45,7 @@ def test_market_context_cannot_widen_the_factual_allowlist() -> None:
             source_ref="truth-table.md",
         )
     ]
-    assert check("We cut resolution time by 40%.", allowlist).verdict == "block"
+    assert check("We cut resolution time by 40%.", allowlist).verdict == "warn"
 
 
 def test_brief_is_never_scored_and_exemplars_never_include_post_bodies(monkeypatch) -> None:

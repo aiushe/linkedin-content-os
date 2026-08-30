@@ -7,15 +7,15 @@ from typing import Any
 from langgraph.types import interrupt
 
 from agent.state import DraftState
+from pipeline.claims import TruthTableWriteError, append_verified_truth_table_row
 
-VALID_ACTIONS = {"approve", "edit", "reject", "retry", "escalate", "annotate"}
+VALID_ACTIONS = {"approve", "edit", "feedback", "source", "reject", "retry", "annotate"}
 
 
 def _available_actions(state: DraftState) -> list[str]:
-    """Return review actions that are safe for the current gate result."""
+    """Return every human-review action for the current draft."""
 
-    actions = VALID_ACTIONS - {"approve"} if state.get("gate_verdict") == "block" else VALID_ACTIONS
-    return sorted(actions)
+    return sorted(VALID_ACTIONS)
 
 
 def _review_payload(state: DraftState) -> dict[str, Any]:
@@ -50,28 +50,85 @@ def _review_payload(state: DraftState) -> dict[str, Any]:
     }
 
 
+def _unresolved_spans(state: DraftState) -> list[str]:
+    """Return the current flagged spans in their review order."""
+
+    report = state.get("claims_report", {})
+    claims = report.get("unresolved", []) if isinstance(report, dict) else []
+    spans: list[str] = []
+    for claim in claims:
+        if not isinstance(claim, dict):
+            continue
+        span = str(claim.get("span") or "").strip()
+        if span and span not in spans:
+            spans.append(span)
+    return spans
+
+
 def hitl(state: DraftState) -> dict:
     """Pause graph execution and normalize the reviewer's six possible actions."""
 
     response = interrupt(_review_payload(state))
     if not isinstance(response, dict):
         response = {"action": str(response)}
-    action = str(response.get("action", "escalate")).lower()
+    action = str(response.get("action", "annotate")).lower()
     if action not in VALID_ACTIONS:
-        action = "escalate"
-    if action == "approve" and state.get("gate_verdict") == "block":
-        return {
-            "decision": "escalate",
-            "terminal_reason": "Approval refused: the draft is blocked by the factual claims gate.",
-        }
+        action = "annotate"
     update: dict[str, Any] = {"decision": action}
-    if action == "edit":
+    if action == "approve":
+        pass
+    elif action == "edit":
         text = str(response.get("draft", "")).strip()
         if not text:
-            update["decision"] = "escalate"
-            update["terminal_reason"] = "Human edit was empty; no draft can be queued."
+            update["decision"] = "annotate"
+            update["claim_source_error"] = (
+                "Type a complete draft before asking the checks to review it."
+            )
         else:
-            update.update({"human_edit": text, "draft": text})
+            update.update(
+                {
+                    "human_edit": text,
+                    "draft": text,
+                }
+            )
+    elif action == "feedback":
+        feedback = str(response.get("feedback", "")).strip()
+        if not feedback:
+            update["decision"] = "annotate"
+            update["claim_source_error"] = "Tell the writer what you want changed."
+        else:
+            update.update(
+                {
+                    "user_directions": [feedback],
+                    "revision": int(state.get("revision") or 0) + 1,
+                }
+            )
+    elif action == "source":
+        claim = response.get("claim")
+        proof = response.get("proof")
+        date = response.get("date")
+        verified = response.get("verified")
+        try:
+            added_fact = append_verified_truth_table_row(claim, proof, date, verified)
+        except TruthTableWriteError as exc:
+            update.update({"decision": "annotate", "claim_source_error": str(exc)})
+        else:
+            allowlist = list(state.get("allowlist", []))
+            allowlist.append(
+                {
+                    "claim": added_fact.claim,
+                    "proof": added_fact.proof,
+                    "period": added_fact.period,
+                    "source": added_fact.source,
+                    "source_ref": added_fact.source_ref,
+                }
+            )
+            update.update(
+                {
+                    "allowlist": allowlist,
+                    "claim_source_error": None,
+                }
+            )
     elif action == "annotate":
         annotation = str(response.get("annotation", "")).strip()
         critique = dict(state.get("critique", {}))
@@ -82,6 +139,6 @@ def hitl(state: DraftState) -> dict:
         update["critique"] = critique
     elif action == "reject":
         update["terminal_reason"] = "Reviewer rejected the draft."
-    elif action == "escalate":
-        update["terminal_reason"] = str(response.get("reason") or "Reviewer requested escalation.")
+    elif action == "retry":
+        update["revision"] = int(state.get("revision") or 0) + 1
     return update

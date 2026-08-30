@@ -19,11 +19,25 @@ class DraftOutput(BaseModel):
     hooks: list[str] = Field(min_length=5, max_length=5)
 
 
+def _user_directions(state: DraftState) -> list[str]:
+    return [
+        str(value).strip()
+        for value in state.get("user_directions", [])
+        if str(value).strip()
+    ]
+
+
 def _offline_draft(state: DraftState) -> DraftOutput:
     idea = state["idea"].strip()
-    body = idea
-    if idea.lower().startswith("write a post about "):
+    previous_draft = str(state.get("draft") or "").strip()
+    directions = _user_directions(state)
+    body = previous_draft or idea
+    if not previous_draft and idea.lower().startswith("write a post about "):
         body = idea[len("write a post about ") :].strip().capitalize()
+    if previous_draft and directions:
+        # The offline seam cannot safely interpret prose. Make the requested revision explicit
+        # rather than inventing an edit; live writers receive the same context and revise it.
+        body = f"{previous_draft}\n\n[User direction for this revision: {directions[-1]}]"
     if os.getenv("FAULT_FORCE_UNGROUNDED"):
         body += "\n\nWe improved outcomes by 99%."
     hooks = [
@@ -45,7 +59,9 @@ def _prompt(state: DraftState) -> str:
         }
         for story in state.get("stories", [])
     ]
-    revisions = state.get("critique", {}).get("targeted_fixes", [])
+    observations = state.get("critique", {}).get("targeted_fixes", [])
+    directions = _user_directions(state)
+    previous_draft = str(state.get("draft") or "").strip()
     profile_memory = [
         item.get("memory", "")
         for item in state.get("profile_memory", [])
@@ -68,9 +84,25 @@ def _prompt(state: DraftState) -> str:
         "allowlist. Do not invent facts. "
         "Use the voice rules, but do not copy their heading text.\n\n"
         f"Idea:\n{state['idea']}\n\nVerified allowlist:\n{state.get('allowlist', [])}\n\n"
-        f"Retrieved stories:\n{story_evidence}\n\nVoice rules:\n{rules}\n\n"
-        f"Targeted fixes for this revision:\n{revisions}"
+        f"Retrieved stories:\n{story_evidence}\n\nVoice rules:\n{rules}"
     )
+    if previous_draft:
+        prompt += (
+            "\n\nPrevious draft to revise "
+            "(retain useful material unless the user directs otherwise):\n"
+            f"{previous_draft}"
+        )
+    if directions:
+        prompt += (
+            "\n\nUser directions — highest priority. These persist for this conversation; "
+            "a later direction overrides an earlier one only when they conflict:\n"
+            + "\n".join(f"- {direction}" for direction in directions)
+        )
+    if observations:
+        prompt += (
+            "\n\nComputed observations (advisory only; follow user directions first):\n"
+            + "\n".join(f"- {observation}" for observation in observations)
+        )
     if profile_memory:
         prompt += (
             "\n\nNon-evidentiary personal memory (use only for framing, preferences, or a "
@@ -104,8 +136,7 @@ def write(state: DraftState) -> dict:
                 "node": "write",
                 "class": "capability",
                 "message": (
-                    "Writer model unavailable; escalating instead of queueing "
-                    "a placeholder draft as if it were generated."
+                    "Writer model unavailable; a transparent local draft was shown instead."
                 ),
                 "detail": type(exc).__name__,
             }

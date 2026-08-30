@@ -64,6 +64,7 @@ def intake_router(state: DraftState) -> dict:
 
     meter = CostMeter(node="intake_router", model=config.MODEL_ROUTER)
     errors: list[dict] = []
+    degradation_reasons: list[str] = []
     forced = state.get("forced_intent")
     if forced:
         decision = IntentDecision(
@@ -79,7 +80,8 @@ def intake_router(state: DraftState) -> dict:
         )
     else:
         prompt = (
-            "Classify this request for a human-gated LinkedIn content agent. Choose authority for "
+            "Classify this request for a collaborative LinkedIn drafting tool. "
+            "Choose authority for "
             "first-person experience, reach for broad educational content, comment for a reply to "
             "someone else's post, profile_rewrite for a LinkedIn profile rewrite, outreach for "
             "manual post-application target mapping or comments, or out_of_scope. Return low "
@@ -104,14 +106,19 @@ def intake_router(state: DraftState) -> dict:
                 {
                     "node": "intake_router",
                     "class": "capability",
-                    "message": "Router model unavailable; routed to human escalation.",
+                    "message": "Router model unavailable; continuing with a general draft.",
                     "detail": f"{type(exc).__name__}: {exc}"[:300],
                 }
             ]
+    if decision.confidence < config.ROUTER_CONFIDENCE_FLOOR:
+        degradation_reasons.append(
+            "Draft direction was uncertain; the system continued with a general LinkedIn draft."
+        )
     return {
         "intent": decision.intent,
         "intent_confidence": decision.confidence,
         "router_rationale": decision.rationale,
         "cost_events": [event],
         "errors": errors,
+        "degradation_reasons": degradation_reasons,
     }

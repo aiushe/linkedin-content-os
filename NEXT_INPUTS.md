@@ -15,9 +15,9 @@ increase it only if a future pull needs deeper author-level history.
 
 Before queueing a real draft, copy the tracked
 `corpus/identity/confidential-terms.md` format into the ignored
-`private/confidential-terms.md` and add the terms you want blocked. The gate is
-intentionally indeterminate until that explicit configuration exists; this agent
-will not create or fill the private list.
+`private/confidential-terms.md` and add the terms you want surfaced for review. The
+check reports an indeterminate advisory result until that explicit configuration
+exists; this agent will not create or fill the private list.
 
 The two pre-graph profile drafts were quarantined in `drafts/ungated/`; regenerate
 them through the full graph before moving any replacement into `drafts/queue/`.
