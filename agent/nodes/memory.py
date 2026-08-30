@@ -10,6 +10,8 @@ from agent.state import DraftState
 def recall_profile_memory(_: DraftState) -> dict:
     """Attach optional context without ever treating it as grounded evidence."""
 
+    if not config.MEM0_ENABLED:
+        return {"profile_memory": [], "profile_memory_status": "disabled"}
     if not config.mem0_service_enabled():
         return {"profile_memory": [], "profile_memory_status": "disabled"}
     if not config.mem0_prompt_enabled():

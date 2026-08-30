@@ -162,8 +162,14 @@ def render(state: dict) -> None:
         st.subheader("Deterministic gate reports")
         report = state.get("claims_report", {})
         unmatched = report.get("unmatched", [])
+        confidential = state.get("confidential_report", {})
         if unmatched:
             st.error("Ungrounded spans: " + ", ".join(str(item.get("span")) for item in unmatched))
+        if confidential.get("matched_terms"):
+            st.error(
+                "Confidential terms: "
+                + ", ".join(str(term) for term in confidential["matched_terms"])
+            )
         claims_column, voice_column = st.columns(2)
         with claims_column:
             st.caption("Factual claims gate")
@@ -171,6 +177,8 @@ def render(state: dict) -> None:
         with voice_column:
             st.caption("Voice fingerprint gate")
             st.json(state.get("voice_report", {}))
+        st.caption("Confidential-terms gate")
+        st.json(confidential)
     if state.get("stories"):
         st.subheader("Retrieval evidence")
         st.dataframe(

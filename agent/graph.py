@@ -27,13 +27,14 @@ from .state import DraftState
 
 
 def deterministic_gate(state: DraftState) -> dict:
-    """Graph adapter for the pure-Python dual gate."""
+    """Graph adapter for the pure-Python deterministic gates."""
 
     allowlist = [AllowedFact(**item) for item in state.get("allowlist", [])]
     report = run_gate(state.get("draft", ""), allowlist)
     update = {
         "voice_report": report.voice,
         "claims_report": asdict(report.claims),
+        "confidential_report": asdict(report.confidential),
         "gate_verdict": report.verdict,
     }
     if report.verdict == "block":
@@ -46,13 +47,26 @@ def deterministic_gate(state: DraftState) -> dict:
                 "detail": ", ".join(spans),
             }
         ]
+        if report.confidential.verdict == "block":
+            update["errors"].append(
+                {
+                    "node": "gate",
+                    "class": "integrity",
+                    "message": "Draft contains configured confidential term(s).",
+                    "detail": ", ".join(report.confidential.matched_terms),
+                }
+            )
     elif report.verdict == "indeterminate":
+        confidential_reason = report.confidential.reason
         update["errors"] = [
             {
                 "node": "gate",
                 "class": "capability",
-                "message": "The gate lacks a viable voice fingerprint or factual allowlist.",
-                "detail": "Human corpus seeding is required before safe drafting.",
+                "message": (
+                    "The gate lacks a viable voice fingerprint, factual allowlist, or "
+                    "confidential-term list."
+                ),
+                "detail": confidential_reason,
             }
         ]
     return update

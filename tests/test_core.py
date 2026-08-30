@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from pipeline import common
 from pipeline.common import canonical_post, split_frontmatter
+from pipeline.normalize import normalize_file
 from pipeline.voice import aggregate, score_text
 from pipeline.xfactor import score_posts
 
@@ -52,6 +53,19 @@ def test_normalization_attributes_a_profile_feed_repost_to_the_watchlist_profile
     assert post["source_profile_handle"] == "watched-profile"
     assert post["original_author_handle"] == "original-author"
     assert post["author_name"] == "Watched Profile"
+
+
+def test_normalize_file_flags_only_an_explicit_owner_handle(tmp_path):
+    source = tmp_path / "raw.json"
+    output = tmp_path / "posts.json"
+    source.write_text(
+        '[{"id": "mine", "content": "My post", "author": {"publicIdentifier": "owner"}}]',
+        encoding="utf-8",
+    )
+
+    normalize_file(source, output, my_handle="owner")
+
+    assert common.read_json(output)[0]["is_mine"] is True
 
 
 def test_xfactor_excludes_current_post_and_requires_sample():

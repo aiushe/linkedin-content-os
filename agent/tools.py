@@ -15,6 +15,13 @@ from pipeline import claims
 from .errors import AgentFailure, FailureClass, with_retry
 from .mcp_loader import server as content_mcp
 
+# `log_story` is intentionally unavailable to the LangGraph graph. It writes to the
+# personal story bank, whereas this graph is structurally read-only until its human-gated
+# commit node. Claude Code may expose it as an explicitly human-invoked intake action.
+CLAUDE_CODE_ONLY_MCP_TOOLS = {
+    "log_story": "Writes private story intake and is intentionally not a graph tool."
+}
+
 
 def _call_mcp(candidate: Any, **kwargs: Any) -> Any:
     """Call a FastMCP-decorated function across supported FastMCP versions."""
@@ -50,6 +57,18 @@ def get_truth_table_read() -> dict[str, Any]:
     """Raw truth-table file, as the skills expect to see it (allowlist parsing is separate)."""
 
     return _call_mcp(content_mcp.get_truth_table)
+
+
+def check_claims_read(draft_text: str) -> dict[str, Any]:
+    """Use the MCP contract for a deterministic preflight claim check."""
+
+    return _call_mcp(content_mcp.check_claims, draft_text=draft_text)
+
+
+def get_voice_report_read(draft_text: str) -> dict[str, Any]:
+    """Use the MCP contract for a deterministic preflight voice check."""
+
+    return _call_mcp(content_mcp.get_voice_report, draft_text=draft_text)
 
 
 def author_baseline_read(handle: str) -> dict[str, Any]:
@@ -118,6 +137,20 @@ def get_truth_table() -> str:
 
 
 @tool
+def check_claims(draft_text: str) -> str:
+    """Check a proposed draft's claims before it reaches the final graph gate."""
+
+    return json.dumps(check_claims_read(draft_text), default=str)
+
+
+@tool
+def get_voice_report(draft_text: str) -> str:
+    """Check a proposed draft's measured voice fit before final graph validation."""
+
+    return json.dumps(get_voice_report_read(draft_text), default=str)
+
+
+@tool
 def author_baseline(handle: str) -> str:
     """Read one creator's scored x-factor baseline from the batch watchlist tier."""
 
@@ -156,6 +189,8 @@ def get_read_tools() -> list[Any]:
         search_stories,
         get_allowlist,
         get_truth_table,
+        check_claims,
+        get_voice_report,
         find_viral_posts,
         get_template,
         author_baseline,

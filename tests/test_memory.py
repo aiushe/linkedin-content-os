@@ -130,6 +130,18 @@ def test_memory_node_withholds_context_from_langsmith_without_second_approval(mo
     assert result["degradation_reasons"]
 
 
+def test_mem0_enabled_false_disables_memory_before_any_client_call(monkeypatch):
+    monkeypatch.setattr(config, "MEM0_ENABLED", False)
+    monkeypatch.setattr(config, "MEM0_API_KEY", "configured-for-test")
+    monkeypatch.setattr(
+        memory, "recall_profile_memories", lambda: pytest.fail("must not call Mem0")
+    )
+
+    result = memory_node.recall_profile_memory({})
+
+    assert result == {"profile_memory": [], "profile_memory_status": "disabled"}
+
+
 @pytest.mark.parametrize(
     ("tracing", "expected"),
     [("true", False), ("false", True)],

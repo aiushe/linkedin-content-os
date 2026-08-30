@@ -65,6 +65,7 @@ def feature_set(text: str) -> Dict[str, Any]:
     )
     return {
         "word_count": len(tokens),
+        "paragraph_count": len(paragraphs),
         "sentence_length_median": round(statistics.median(sentence_lengths), 3)
         if sentence_lengths
         else 0.0,

@@ -10,9 +10,16 @@ except ImportError:  # pragma: no cover - direct script execution
     from common import ROOT, load_all_posts
 
 
-def report(posts: List[Dict[str, Any]]) -> str:
+def my_posts(posts: List[Dict[str, Any]], window: int | None = None) -> List[Dict[str, Any]]:
+    """Return explicitly flagged self posts; this never guesses the owner's handle."""
+
     mine = [post for post in posts if post.get("is_mine")]
     mine.sort(key=lambda post: str(post.get("posted_at") or ""), reverse=True)
+    return mine[:window] if window is not None else mine
+
+
+def report(posts: List[Dict[str, Any]]) -> str:
+    mine = my_posts(posts)
     lines = [
         "# My post performance",
         "",

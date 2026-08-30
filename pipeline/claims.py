@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from agent import config
+
 from . import common
 
 ClaimKind = Literal["numeric", "superlative", "attribution"]
@@ -278,6 +280,35 @@ def _narrative_match(claim: Claim, narrative_only: set[str]) -> bool:
     return False
 
 
+def _matching_fact(claim: Claim, allowlist: list[AllowedFact]) -> AllowedFact | None:
+    """Return permitted evidence without ever accepting an approximate number.
+
+    The default permits an exact extracted span (for example, ``30%``) only when
+    it occurs in verified evidence.  Setting ``CLAIM_REQUIRE_EXACT=false`` remains
+    fail-closed: it requires the entire verified fact to occur in the sentence,
+    which is useful for deliberately stricter local review rather than fuzzy match.
+    """
+
+    if config.CLAIM_REQUIRE_EXACT:
+        return next(
+            (
+                candidate
+                for candidate in allowlist
+                if _normalise(claim.span) in _normalise(candidate.claim)
+            ),
+            None,
+        )
+    normalised_sentence = _normalise(claim.sentence)
+    return next(
+        (
+            candidate
+            for candidate in allowlist
+            if _normalise(candidate.claim) in normalised_sentence
+        ),
+        None,
+    )
+
+
 def check(draft_body: str, allowlist: list[AllowedFact] | None = None) -> ClaimsReport:
     """Return a fail-closed factual-grounding report for a draft body."""
 
@@ -290,14 +321,7 @@ def check(draft_body: str, allowlist: list[AllowedFact] | None = None) -> Claims
     unmatched: list[Claim] = []
     narrative_hits: list[Claim] = []
     for claim in claims:
-        fact = next(
-            (
-                candidate
-                for candidate in allowlist
-                if _normalise(claim.span) in _normalise(candidate.claim)
-            ),
-            None,
-        )
+        fact = _matching_fact(claim, allowlist)
         if fact is not None:
             matched.append((claim, fact))
         elif claim.kind in {"numeric", "superlative"}:

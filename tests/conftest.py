@@ -29,7 +29,7 @@ def synthetic_corpus(monkeypatch):
     """Point runtime corpus readers at the tracked, fictional development corpus."""
 
     from agent.mcp_loader import server as mcp_server
-    from pipeline import common
+    from pipeline import common, confidential
 
     fixture = ROOT / "tests" / "fixtures" / "dev_corpus"
     monkeypatch.setattr(common, "ROOT", fixture)
@@ -38,4 +38,5 @@ def synthetic_corpus(monkeypatch):
     monkeypatch.setattr(common, "INTEL", fixture / "intel")
     monkeypatch.setattr(mcp_server, "ROOT", fixture)
     monkeypatch.setattr(mcp_server, "INTEL", fixture / "intel")
+    monkeypatch.setattr(confidential, "load_terms", lambda: {"synthetic confidential term"})
     return fixture

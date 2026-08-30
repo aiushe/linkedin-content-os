@@ -39,6 +39,6 @@ uv sync --extra dev
 uv run python pipeline/index_corpus.py
 uv run python pipeline/voice.py fingerprint
 uv run python pipeline/xfactor.py
-uv run python pipeline/normalize.py --input intel/raw/pull.json
+uv run python pipeline/normalize.py --input intel/raw/<reviewed-input>.json
 uv run pytest
 ```

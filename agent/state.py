@@ -49,6 +49,7 @@ class DraftState(TypedDict, total=False):
     # Gates
     voice_report: dict
     claims_report: dict
+    confidential_report: dict
     gate_verdict: GateVerdict
 
     # Critique

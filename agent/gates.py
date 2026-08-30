@@ -1,11 +1,11 @@
-"""Deterministic, fail-closed voice and factual grounding gates."""
+"""Deterministic, fail-closed voice, factual, and confidentiality gates."""
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from typing import Any, Literal
 
-from pipeline import claims, voice
+from pipeline import claims, confidential, voice
 
 from . import config
 
@@ -18,12 +18,14 @@ class GateReport:
     verdict: GateVerdict
     voice: dict[str, Any]
     claims: claims.ClaimsReport
+    confidential: confidential.ConfidentialTermsReport
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "verdict": self.verdict,
             "voice": self.voice,
             "claims": asdict(self.claims),
+            "confidential": asdict(self.confidential),
         }
 
 
@@ -111,27 +113,40 @@ def _verdict(value: Any) -> str:
     return str(getattr(value, "verdict", "indeterminate"))
 
 
-def reduce_verdicts(voice_report: Any, claims_report: Any) -> GateVerdict:
-    """Reduce component verdicts with factual blocks taking absolute precedence."""
+def reduce_verdicts(
+    voice_report: Any, claims_report: Any, confidential_report: Any | None = None
+) -> GateVerdict:
+    """Reduce component verdicts with factual and confidentiality blocks first."""
 
     claim_verdict = _verdict(claims_report)
+    confidential_verdict = _verdict(confidential_report or {"verdict": "pass"})
     voice_verdict = _verdict(voice_report)
-    if claim_verdict == "block":
+    if claim_verdict == "block" or confidential_verdict == "block":
         return "block"
-    if claim_verdict == "indeterminate" or voice_verdict == "indeterminate":
+    if (
+        claim_verdict == "indeterminate"
+        or confidential_verdict == "indeterminate"
+        or voice_verdict == "indeterminate"
+    ):
         return "indeterminate"
     if voice_verdict == "revise":
         return "revise"
     return "pass"
 
 
-def gate(draft: str, allowlist: list[claims.AllowedFact] | None = None) -> GateReport:
-    """Run both deterministic gates without a model or network request."""
+def gate(
+    draft: str,
+    allowlist: list[claims.AllowedFact] | None = None,
+    confidential_terms: set[str] | None = None,
+) -> GateReport:
+    """Run all deterministic gates without a model or network request."""
 
     voice_report = safe_voice_score(draft)
     claims_report = claims.check(draft, allowlist)
+    confidential_report = confidential.check(draft, confidential_terms)
     return GateReport(
-        verdict=reduce_verdicts(voice_report, claims_report),
+        verdict=reduce_verdicts(voice_report, claims_report, confidential_report),
         voice=voice_report,
         claims=claims_report,
+        confidential=confidential_report,
     )

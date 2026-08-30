@@ -28,6 +28,7 @@ def test_commit_writes_only_after_approval_and_updates_private_story(tmp_path, m
     queued = tmp_path / result["queue_path"]
     assert queued.exists()
     assert "claims_checked: true" in queued.read_text(encoding="utf-8")
+    assert "confidential_terms_check: pass" in queued.read_text(encoding="utf-8")
     assert queued.stem in private_story.read_text(encoding="utf-8")
 
 

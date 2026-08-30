@@ -32,6 +32,7 @@ from pipeline.common import (
     slugify,
 )
 from pipeline.index_corpus import build_index
+from pipeline.selfmetrics import my_posts
 
 mcp = FastMCP("LinkedIn Content OS")
 
@@ -226,9 +227,7 @@ def author_baseline(handle: str) -> Dict[str, Any]:
 @mcp.tool()
 def my_performance(window: int = 30) -> List[Dict[str, Any]]:
     """Return your own posts (flagged `is_mine`) for human performance review."""
-    mine = [post for post in load_all_posts() if post.get("is_mine")]
-    mine.sort(key=lambda item: str(item.get("posted_at") or ""), reverse=True)
-    return mine[: max(1, min(window, 100))]
+    return my_posts(load_all_posts(), window=max(1, min(window, 100)))
 
 
 @mcp.tool()

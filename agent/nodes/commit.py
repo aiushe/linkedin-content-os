@@ -84,6 +84,7 @@ def commit(state: DraftState) -> dict:
         f"template_id: {json.dumps(template_id)}",
         "claims_checked: true",
         "voice_check: pass",
+        "confidential_terms_check: pass",
         f"created_at: {now.isoformat()}",
         "---",
         "",

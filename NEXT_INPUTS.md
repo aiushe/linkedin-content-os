@@ -11,14 +11,16 @@ After repairing timestamp normalization, the existing 225-post batch produces
 self-excluded posts from the same author. Keep the current `maxPosts` setting;
 increase it only if a future pull needs deeper author-level history.
 
-## 2. Handle pre-graph profile drafts
+## 2. Configure the confidential-terms gate
 
-Two existing queue drafts were not produced through router → ground → write →
-gate → human approval → commit. Choose one action before relying on them:
+Before queueing a real draft, copy the tracked
+`corpus/identity/confidential-terms.md` format into the ignored
+`private/confidential-terms.md` and add the terms you want blocked. The gate is
+intentionally indeterminate until that explicit configuration exists; this agent
+will not create or fill the private list.
 
-- delete them;
-- quarantine them outside `drafts/queue/`; or
-- recreate them through the graph after the profile-rewrite coverage gate passes.
+The two pre-graph profile drafts were quarantined in `drafts/ungated/`; regenerate
+them through the full graph before moving any replacement into `drafts/queue/`.
 
 ## 3. Add approved personal memory
 
@@ -35,10 +37,11 @@ dashboard prompt traces.
 
 ## 4. Maintain the corpus safely
 
-When you have a new verified story, metric, or voice sample, add it yourself to
+When you have a new verified story, metric, voice sample, or an own-post pull, add it yourself to
 the ignored `private/` corpus, rebuild the relevant index/fingerprint, and
 rerun the verification suite. Do not place credentials or personal corpus files
-in git.
+in git. For own-post performance, pass your own public handle explicitly to
+`pipeline/normalize.py --my-handle`; the system never guesses it.
 
 ## 5. Security follow-up
 

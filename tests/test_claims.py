@@ -1,3 +1,4 @@
+from agent import config
 from pipeline import claims
 
 
@@ -30,6 +31,14 @@ def test_exact_numeric_matching_blocks_near_miss(synthetic_corpus):
     report = claims.check("I reduced routing time by 31%.", allowed)
     assert report.verdict == "block"
     assert [claim.span for claim in report.unmatched] == ["31%"]
+
+
+def test_claim_matching_mode_is_read_and_never_accepts_a_near_miss(synthetic_corpus, monkeypatch):
+    monkeypatch.setattr(config, "CLAIM_REQUIRE_EXACT", False)
+
+    report = claims.check("I reduced routing time by 31%.", claims.load_allowlist())
+
+    assert report.verdict == "block"
 
 
 def test_empty_allowlist_is_indeterminate(synthetic_corpus):

@@ -6,7 +6,7 @@ This agent turns a rough LinkedIn idea into a voice-matched, evidence-grounded
 draft in a local Streamlit app. Nebius Token Factory supplies optional live models
 through its OpenAI-compatible API. It retrieves, drafts, and critiques on its own,
 but cannot queue a file until a human explicitly approves it. An ungrounded claim
-hard-stops rather than being automatically rewritten.
+or configured confidential term hard-stops rather than being automatically rewritten.
 
 ## Workflow
 
@@ -21,7 +21,7 @@ flowchart TD
     Router -->|out of scope| Fallback[fallback]
     Ground --> Intel[fixed market brief\nauthority / reach only]
     Intel --> Write[write]
-    Write --> Gate[deterministic voice + claims gate]
+    Write --> Gate[deterministic voice + claims + confidentiality gates]
     Gate -->|pass| HITL{{human interrupt}}
     Gate -->|revise| Critique[computed-rubric critique]
     Gate -->|block / indeterminate| Escalate
@@ -40,11 +40,15 @@ The editable Mermaid source is [architecture.mmd](architecture.mmd).
 - The only writer is `commit`, which is downstream of `interrupt()` and accepts
   only an explicit `approve` action with a passing gate report.
 - `queue_draft` is not a LangChain tool. The grounding ReAct agent receives only
-  five read tools, so an LLM cannot choose to write.
+  read tools, so an LLM cannot choose to write.
 - `pipeline.claims` parses only verified five-column truth-table rows and verified
   story metrics. It ignores frontmatter, review notes, years, and list numbering.
 - Voice scoring fails closed when the fingerprint has fewer than three samples,
   fewer than 1,500 words, or no features.
+- The confidential-terms gate reads only the ignored `private/confidential-terms.md`.
+  It literal-matches configured terms case-insensitively and reports matched terms to
+  the human reviewer. A missing or empty private list is indeterminate and blocks the
+  queue; the tracked `corpus/identity/confidential-terms.md` is a non-enforcing template.
 - Market intel can degrade. Empty stories, an ungrounded claim, an indeterminate
   gate, or a revision-loop cap escalates instead of silently proceeding.
 - Live market search is unscored and runs once, after grounding, only for `authority`
@@ -102,6 +106,7 @@ Mem0 Platform is configured with `MEM0_API_KEY`, `MEM0_ENABLED`, and an opaque
 Mem0 project. Profile memory remains withheld from model prompts during LangSmith
 tracing unless `MEM0_ALLOW_LANGSMITH_TRACING=true`; that prevents the profile
 facts from appearing in dashboard prompt traces without a second approval.
+<!-- audit-accept: agent/config.py:MEM0_ALLOW_LANGSMITH_TRACING -->
 
 ## Authored skill loading
 
@@ -145,9 +150,31 @@ Market intel has two distinct paths:
 2. The in-graph live search is unscored, optional, cached, and restricted to authority/reach
    intent. It can shape an angle but is never evidence for a factual claim.
 
-Build market templates after a batch pull with `pipeline/embed.py market --allow-network` and
-`pipeline/cluster.py text`. Missing templates degrade grounding explicitly; they never bypass the
-claims or voice gate.
+Build market templates after a batch pull with `pipeline/cluster.py text`. Text templates default
+to structural clustering using paragraph count, sentence rhythm, list-line rate, opening move,
+and contraction rate; the embedding path remains available as `pipeline/cluster.py text --method
+semantic`. Run `scripts/build_reports.py` afterward to create `intel/reports/top-posts.md` and
+the structural template library. Missing templates degrade grounding explicitly; they never
+bypass the claims, voice, or confidentiality gate.
+
+## MCP tool boundary
+
+`check_claims` and `get_voice_report` are available to the LangGraph grounding agent as
+read-only deterministic preflight tools and share the same local implementations as the final
+gate. `log_story` is intentionally Claude-Code-only: it writes a private story intake, so the
+LangGraph graph never receives it. The graph's only write remains the approval-gated commit node.
+
+## Self-performance and edit-diff boundaries
+
+`is_mine` is set only when a human supplies `pipeline/normalize.py --my-handle <public-handle>`;
+the system never infers ownership from a pull. This makes `pipeline/selfmetrics.py` and MCP's
+`my_performance` path functional once an explicit owner handle is supplied, while the current
+batch truthfully has no self posts.
+
+`pipeline/voicediff.py` is a deliberate, on-demand review utility. A human selects a generated
+and a published file, receives a candidate-rule report, and decides whether to promote a pattern.
+It is not graph-wired because the graph must never automatically capture or send human edits to
+Mem0 or any other service. <!-- audit-accept: pipeline/voicediff.py -->
 
 ## Operating the project
 

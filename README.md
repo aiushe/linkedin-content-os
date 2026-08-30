@@ -2,7 +2,8 @@
 
 A local, human-gated LangGraph system for grounded LinkedIn drafting. It uses
 your ignored `private/` corpus for evidence and voice analysis, optional market
-intel for structural context, and deterministic voice and factual-claim gates.
+intel for structural context, and deterministic voice, factual-claim, and
+confidential-terms gates.
 Nothing is published, messaged, or written to `drafts/queue/` without an
 `interrupt()` approval.
 
@@ -31,6 +32,8 @@ Nothing is published, messaged, or written to `drafts/queue/` without an
    ```bash
    uv run python pipeline/index_corpus.py
    uv run python pipeline/voice.py fingerprint
+   uv run python pipeline/cluster.py text
+   uv run python scripts/build_reports.py
    ```
 
 4. For live Nebius calls, configure local `.env` values for `LLM_BASE_URL`,
@@ -70,3 +73,8 @@ Mem0 memory is optional and non-evidentiary. It can provide framing and writing
 preferences, but cannot create a factual claim or expand the deterministic
 allowlist. The sidebar supports explicit add, replace, list, and permanent-delete
 operations; no memory write is automatic.
+
+Before queueing any real draft, create your own ignored
+`private/confidential-terms.md` from the tracked
+`corpus/identity/confidential-terms.md` template. The confidential-terms gate
+fails closed until that private list contains at least one term.

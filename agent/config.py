@@ -21,7 +21,7 @@ VOICE_Z_THRESHOLD = float(os.getenv("VOICE_Z_THRESHOLD", "1.5"))
 VOICE_MIN_SAMPLES = int(os.getenv("VOICE_MIN_SAMPLES", "3"))
 VOICE_MIN_WORDS = int(os.getenv("VOICE_MIN_WORDS", "1500"))
 MAX_REVISIONS = int(os.getenv("MAX_REVISIONS", "3"))
-CLAIM_REQUIRE_EXACT = True
+CLAIM_REQUIRE_EXACT = os.getenv("CLAIM_REQUIRE_EXACT", "true").lower() in {"1", "true", "yes"}
 
 # Any OpenAI-compatible endpoint works here: OpenAI (default), Nebius Token Factory,
 # Fireworks, or a local server. Only the base URL and key env var change.
