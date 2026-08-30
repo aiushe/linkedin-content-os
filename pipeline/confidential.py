@@ -1,8 +1,9 @@
-"""Fail-closed detection of human-maintained confidential terms.
+"""Advisory detection of human-maintained confidential terms.
 
-The local term list is intentionally private and optional to create.  An absent or
-empty list is an indeterminate result, never a pass, so a draft cannot enter the
-queue until its owner has explicitly configured this safeguard.
+The local term list is intentionally private and optional. Matches are reported to
+the human reviewer, but confidentiality findings never determine whether a draft
+can be approved. The Git boundary, not this advisory check, keeps local drafts out
+of the public repository.
 """
 
 from __future__ import annotations
@@ -14,13 +15,14 @@ from typing import Literal
 
 from . import common
 
-ConfidentialVerdict = Literal["pass", "block", "indeterminate"]
+ConfidentialVerdict = Literal["pass", "warn"]
 
 
 @dataclass
 class ConfidentialTermsReport:
     verdict: ConfidentialVerdict
     matched_terms: list[str]
+    matched_lines: dict[str, list[int]]
     term_count: int
     reason: str
 
@@ -47,27 +49,30 @@ def load_terms(path: Path | None = None) -> set[str] | None:
 
 
 def check(draft: str, terms: set[str] | None = None) -> ConfidentialTermsReport:
-    """Block configured literal matches; fail closed if the list is not ready."""
+    """Warn on configured literal matches without blocking a human decision."""
 
     configured = load_terms() if terms is None else terms
     if not configured:
         return ConfidentialTermsReport(
-            verdict="indeterminate",
+            verdict="pass",
             matched_terms=[],
+            matched_lines={},
             term_count=0,
-            reason="Confidential-term gate is not configured; add private/confidential-terms.md.",
+            reason="Confidential-term list is not configured; advisory check was skipped.",
         )
-    matched = [
-        term
-        for term in sorted(configured, key=str.lower)
-        if re.search(rf"(?<!\w){re.escape(term)}(?!\w)", draft, re.IGNORECASE)
-    ]
+    matched_lines: dict[str, list[int]] = {}
+    for term in sorted(configured, key=str.lower):
+        matches = list(re.finditer(rf"(?<!\w){re.escape(term)}(?!\w)", draft, re.IGNORECASE))
+        if matches:
+            matched_lines[term] = [draft.count("\n", 0, match.start()) + 1 for match in matches]
+    matched = list(matched_lines)
     return ConfidentialTermsReport(
-        verdict="block" if matched else "pass",
+        verdict="warn" if matched else "pass",
         matched_terms=matched,
+        matched_lines=matched_lines,
         term_count=len(configured),
         reason=(
-            "Matched confidential term(s)."
+            "Matched confidential term(s); human review is required before approval."
             if matched
             else "No configured confidential terms found."
         ),

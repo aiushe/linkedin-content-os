@@ -166,9 +166,22 @@ def render(state: dict) -> None:
         if unmatched:
             st.error("Ungrounded spans: " + ", ".join(str(item.get("span")) for item in unmatched))
         if confidential.get("matched_terms"):
-            st.error(
-                "Confidential terms: "
-                + ", ".join(str(term) for term in confidential["matched_terms"])
+            st.warning(
+                "Confidential-term advisory warning: review these terms before approval. "
+                "A human decision is still required to queue this draft."
+            )
+            st.dataframe(
+                [
+                    {
+                        "matched term": term,
+                        "draft line(s)": ", ".join(
+                            str(line)
+                            for line in confidential.get("matched_lines", {}).get(term, [])
+                        ),
+                    }
+                    for term in confidential["matched_terms"]
+                ],
+                use_container_width=True,
             )
         claims_column, voice_column = st.columns(2)
         with claims_column:
@@ -177,7 +190,7 @@ def render(state: dict) -> None:
         with voice_column:
             st.caption("Voice fingerprint gate")
             st.json(state.get("voice_report", {}))
-        st.caption("Confidential-terms gate")
+        st.caption("Confidential-terms advisory check")
         st.json(confidential)
     if state.get("stories"):
         st.subheader("Retrieval evidence")

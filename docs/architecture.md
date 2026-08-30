@@ -5,8 +5,9 @@
 This agent turns a rough LinkedIn idea into a voice-matched, evidence-grounded
 draft in a local Streamlit app. Nebius Token Factory supplies optional live models
 through its OpenAI-compatible API. It retrieves, drafts, and critiques on its own,
-but cannot queue a file until a human explicitly approves it. An ungrounded claim
-or configured confidential term hard-stops rather than being automatically rewritten.
+but cannot queue a file until a human explicitly approves it. An ungrounded claim or
+an unusable voice fingerprint hard-stops; configured confidential terms are advisory
+warnings for the human reviewer.
 
 ## Workflow
 
@@ -21,8 +22,8 @@ flowchart TD
     Router -->|out of scope| Fallback[fallback]
     Ground --> Intel[fixed market brief\nauthority / reach only]
     Intel --> Write[write]
-    Write --> Gate[deterministic voice + claims + confidentiality gates]
-    Gate -->|pass| HITL{{human interrupt}}
+    Write --> Gate[deterministic voice + claims gates\nconfidentiality advisory check]
+    Gate -->|pass, including confidentiality warnings| HITL{{human interrupt}}
     Gate -->|revise| Critique[computed-rubric critique]
     Gate -->|block / indeterminate| Escalate
     Critique --> Write
@@ -45,10 +46,14 @@ The editable Mermaid source is [architecture.mmd](architecture.mmd).
   story metrics. It ignores frontmatter, review notes, years, and list numbering.
 - Voice scoring fails closed when the fingerprint has fewer than three samples,
   fewer than 1,500 words, or no features.
-- The confidential-terms gate reads only the ignored `private/confidential-terms.md`.
-  It literal-matches configured terms case-insensitively and reports matched terms to
-  the human reviewer. A missing or empty private list is indeterminate and blocks the
-  queue; the tracked `corpus/identity/confidential-terms.md` is a non-enforcing template.
+- Three gate postures are intentionally different. Claims and voice are fail-closed:
+  either can block or escalate a draft. The confidential-terms check reads only the
+  ignored `private/confidential-terms.md`, literal-matches configured terms
+  case-insensitively, and reports the matching terms and draft lines to the human
+  reviewer. It is advisory: a missing or empty list is a clean "not configured" state,
+  and a warning can still be approved by the human. The Git ignore boundary protects
+  customer names from the public repository; this check supports the user's per-post
+  decision rather than replacing it.
 - Market intel can degrade. Empty stories, an ungrounded claim, an indeterminate
   gate, or a revision-loop cap escalates instead of silently proceeding.
 - Live market search is unscored and runs once, after grounding, only for `authority`

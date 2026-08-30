@@ -1,4 +1,4 @@
-"""Deterministic, fail-closed voice, factual, and confidentiality gates."""
+"""Deterministic fail-closed voice and factual gates with an advisory confidentiality check."""
 
 from __future__ import annotations
 
@@ -116,18 +116,13 @@ def _verdict(value: Any) -> str:
 def reduce_verdicts(
     voice_report: Any, claims_report: Any, confidential_report: Any | None = None
 ) -> GateVerdict:
-    """Reduce component verdicts with factual and confidentiality blocks first."""
+    """Reduce only blocking integrity verdicts; confidentiality findings are advisory."""
 
     claim_verdict = _verdict(claims_report)
-    confidential_verdict = _verdict(confidential_report or {"verdict": "pass"})
     voice_verdict = _verdict(voice_report)
-    if claim_verdict == "block" or confidential_verdict == "block":
+    if claim_verdict == "block":
         return "block"
-    if (
-        claim_verdict == "indeterminate"
-        or confidential_verdict == "indeterminate"
-        or voice_verdict == "indeterminate"
-    ):
+    if claim_verdict == "indeterminate" or voice_verdict == "indeterminate":
         return "indeterminate"
     if voice_verdict == "revise":
         return "revise"

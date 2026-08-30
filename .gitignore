@@ -37,3 +37,18 @@ intel/cache/
 intel/market-index.json
 ops/metrics/*.md
 tests/fixtures/dev_corpus/intel/cache/
+
+# Derived third-party post reports remain local-only.
+intel/reports/top-posts.md
+intel/reports/template-library.md
+
+# Drafts are local review artifacts. Keep the tracked template and empty folders
+# so a fresh clone has the required structure, but never track draft contents.
+drafts/queue/*
+drafts/approved/*
+drafts/published/*
+drafts/ungated/*
+!drafts/queue/.gitkeep
+!drafts/approved/.gitkeep
+!drafts/published/.gitkeep
+!drafts/ungated/.gitkeep

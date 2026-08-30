@@ -14,8 +14,14 @@ disposable market research.
    never as numbers.
 3. Preserve the user's actual voice. Run `pipeline/voice.py score` and the `voice-check`
    skill before queuing a draft. Do not use a generic "professional LinkedIn" voice.
-4. Keep `private/` and generated market data out of git. Do not scrape LinkedIn with a personal session
-   cookie. Review an actor's terms, pricing, and proxy behavior before using it.
+4. Claims and voice gates are fail-closed: an ungrounded factual claim or an unusable voice
+   fingerprint must block or escalate the draft. The confidential-terms check is advisory:
+   it warns the human about configured literal matches but cannot refuse a draft, and a warned
+   draft can still be approved. The Git ignore boundary, not the advisory check, keeps drafts
+   and customer names out of the public repository.
+5. Keep `private/`, all draft contents, and generated market data out of git. Do not scrape
+   LinkedIn with a personal session cookie. Review an actor's terms, pricing, and proxy behavior
+   before using it.
 
 ## Primary inputs
 

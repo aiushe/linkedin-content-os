@@ -23,6 +23,7 @@ def _review_payload(state: DraftState) -> dict[str, Any]:
         "gate_verdict": state.get("gate_verdict"),
         "voice_report": state.get("voice_report", {}),
         "claims_report": state.get("claims_report", {}),
+        "confidential_report": state.get("confidential_report", {}),
         "evidence": [
             {"id": story.get("id"), "title": story.get("title"), "path": story.get("path")}
             for story in state.get("stories", [])
