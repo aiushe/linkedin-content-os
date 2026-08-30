@@ -27,7 +27,7 @@ def test_confidential_gate_cannot_block_an_otherwise_passing_draft(monkeypatch):
     monkeypatch.setattr(confidential, "load_terms", lambda: {"Internal Codename"})
     monkeypatch.setattr(
         "agent.gates.safe_voice_score",
-        lambda _: {"verdict": "pass", "flags": [], "banned_tells": []},
+        lambda _, **kwargs: {"verdict": "pass", "flags": [], "banned_tells": []},
     )
 
     report = gate(

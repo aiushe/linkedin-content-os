@@ -257,12 +257,25 @@ state = current_state()
 render(state)
 
 if (
-    state.get("gate_verdict") == "pass"
+    state.get("gate_verdict") in {"pass", "block"}
     and not state.get("queue_path")
     and state.get("decision") not in {"reject", "escalate"}
 ):
     st.subheader("Human review")
     st.caption(f"Revision {state.get('revision', 0)} · choose exactly one review action.")
+    blocked = state.get("gate_verdict") == "block"
+    if blocked:
+        spans = [
+            str(item.get("span"))
+            for item in state.get("claims_report", {}).get("unmatched", [])
+            if item.get("span")
+        ]
+        st.error(
+            "Approval is unavailable: this draft is blocked by the factual claims gate. "
+            "Edit it to remove or ground the claim, then the gates will run again."
+        )
+        if spans:
+            st.error("Blocked spans: " + ", ".join(spans))
     st.text_area(
         "Edited draft (used if Edit is selected)", key="edited_draft", value=state.get("draft", "")
     )
@@ -270,7 +283,9 @@ if (
     columns = st.columns(6)
     actions = ["approve", "edit", "reject", "retry", "escalate", "annotate"]
     for column, action in zip(columns, actions):
-        if column.button(action.title(), use_container_width=True):
+        if column.button(
+            action.title(), use_container_width=True, disabled=blocked and action == "approve"
+        ):
             response: dict[str, str] = {"action": action}
             if action == "edit":
                 response["draft"] = st.session_state.get("edited_draft", state.get("draft", ""))

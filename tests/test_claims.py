@@ -1,3 +1,5 @@
+import pytest
+
 from agent import config
 from pipeline import claims
 
@@ -84,6 +86,28 @@ def test_temporal_at_first_is_not_a_superlative_claim(synthetic_corpus):
     )
     assert report.verdict == "pass"
     assert report.unmatched == []
+
+
+@pytest.mark.parametrize(
+    ("draft", "verdict", "spans"),
+    [
+        ("I built a retrieval-first RAG system.", "pass", []),
+        ("This is a first-class approach.", "pass", []),
+        ("I was the first PM on the team.", "block", ["first"]),
+        ("This is a best-in-class approach.", "block", ["best-in-class"]),
+        ("We used a first-mover advantage.", "pass", []),
+        ("I grew up as an only-child.", "pass", []),
+        ("It became the fastest workflow in the organization.", "block", ["fastest"]),
+        ("This was our largest launch.", "block", ["largest"]),
+    ],
+)
+def test_hyphenated_superlative_modifiers_do_not_hide_standalone_claims(
+    synthetic_corpus, draft, verdict, spans
+):
+    report = claims.check(draft, claims.load_allowlist())
+
+    assert report.verdict == verdict
+    assert [claim.span.lower() for claim in report.unmatched] == spans
 
 
 def test_attribution_is_reported_but_not_made_up_as_a_numeric_block(synthetic_corpus):

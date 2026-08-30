@@ -1,6 +1,7 @@
 from langgraph.types import Command
 
 from agent import config
+from agent import graph as graph_module
 from agent.graph import build_graph
 from agent.nodes.hitl import VALID_ACTIONS, _review_payload
 from pipeline import common
@@ -70,7 +71,7 @@ def test_review_payload_contains_the_complete_human_approval_context():
     assert set(payload["actions"]) == VALID_ACTIONS
 
 
-def test_ungrounded_metric_hard_stops(synthetic_corpus, monkeypatch):
+def test_blocked_draft_reaches_human_interrupt(synthetic_corpus, monkeypatch):
     monkeypatch.setenv("AGENT_OFFLINE", "1")
     graph = build_graph()
     run_config = {"configurable": {"thread_id": "poison"}}
@@ -83,9 +84,75 @@ def test_ungrounded_metric_hard_stops(synthetic_corpus, monkeypatch):
         },
         config=run_config,
     )
-    state = graph.get_state(run_config).values
+    snapshot = graph.get_state(run_config)
+    state = snapshot.values
     assert state["gate_verdict"] == "block"
-    assert "Integrity stop" in state["terminal_reason"]
+    assert snapshot.next == ("hitl",)
+    assert "approve" not in snapshot.tasks[0].interrupts[0].value["actions"]
+
+
+def test_blocked_draft_approval_is_refused_before_commit(synthetic_corpus, monkeypatch):
+    monkeypatch.setenv("AGENT_OFFLINE", "1")
+    committed: list[dict] = []
+    monkeypatch.setattr(graph_module, "commit", lambda state: committed.append(state) or {})
+    graph = graph_module.build_graph()
+    run_config = {"configurable": {"thread_id": "blocked-approval"}}
+    graph.invoke(
+        {
+            "idea": "I reduced routing time by 41%.",
+            "thread_id": "blocked-approval",
+            "forced_intent": "authority",
+            "revision": 0,
+        },
+        config=run_config,
+    )
+
+    graph.invoke(Command(resume={"action": "approve"}), config=run_config)
+
+    state = graph.get_state(run_config).values
+    assert committed == []
+    assert not state.get("queue_path")
+    assert state["decision"] == "escalate"
+    assert state["terminal_reason"].startswith("Approval refused")
+
+
+def test_human_can_edit_blocked_draft_then_approve_clean_revision(
+    synthetic_corpus, monkeypatch, tmp_path
+):
+    monkeypatch.setenv("AGENT_OFFLINE", "1")
+    graph = build_graph()
+    run_config = {"configurable": {"thread_id": "blocked-edit"}}
+    graph.invoke(
+        {
+            "idea": "I reduced routing time by 41%.",
+            "thread_id": "blocked-edit",
+            "forced_intent": "authority",
+            "revision": 0,
+        },
+        config=run_config,
+    )
+
+    graph.invoke(
+        Command(
+            resume={
+                "action": "edit",
+                "draft": "I reduced routing time by 30% by treating labels as product decisions.",
+            }
+        ),
+        config=run_config,
+    )
+
+    snapshot = graph.get_state(run_config)
+    assert snapshot.values["gate_verdict"] == "pass"
+    assert snapshot.next == ("hitl",)
+    monkeypatch.setattr(common, "ROOT", tmp_path)
+    monkeypatch.setattr(common, "PRIVATE", tmp_path / "private")
+
+    graph.invoke(Command(resume={"action": "approve"}), config=run_config)
+
+    state = graph.get_state(run_config).values
+    assert state["queue_path"].startswith("drafts/queue/")
+    assert (tmp_path / state["queue_path"]).exists()
 
 
 def test_out_of_scope_request_falls_back(synthetic_corpus, monkeypatch):
@@ -153,6 +220,7 @@ def test_forced_ungrounded_fault_hits_integrity_gate(synthetic_corpus, monkeypat
         },
         config=run_config,
     )
-    state = graph.get_state(run_config).values
+    snapshot = graph.get_state(run_config)
+    state = snapshot.values
     assert state["gate_verdict"] == "block"
-    assert "Integrity stop" in state["terminal_reason"]
+    assert snapshot.next == ("hitl",)

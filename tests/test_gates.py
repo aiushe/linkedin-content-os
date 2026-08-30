@@ -34,6 +34,73 @@ def test_safe_voice_score_deduplicates_tells(monkeypatch):
     assert result["banned_tells"] == ["Tell", "rhetorical-question openers"]
 
 
+def test_short_post_excludes_paragraph_shape_from_voice_scoring(monkeypatch):
+    profile = {
+        "sample_count": 3,
+        "word_count": 1500,
+        "features": {
+            "paragraph_length_mean": {"mean": 379.7, "stdev": 129.4},
+            "paragraph_length_stdev": {"mean": 0.0, "stdev": 1.0},
+            "first_person_rate": {"mean": 0.039, "stdev": 0.1},
+        },
+    }
+    monkeypatch.setattr(gates.voice, "load_fingerprint", lambda: profile)
+    monkeypatch.setattr(
+        gates.voice,
+        "score_text",
+        lambda draft, profile: {
+            "features": {
+                "paragraph_length_mean": 28.1,
+                "paragraph_length_stdev": 8.0,
+                "first_person_rate": 0.039,
+            },
+            "flags": [],
+            "banned_tells": [],
+        },
+    )
+
+    result = gates.safe_voice_score("A short LinkedIn post.", target_format="short_post")
+
+    assert result["verdict"] == "pass"
+    assert result["flags"] == []
+    assert result["excluded_features"] == [
+        "paragraph_length_mean",
+        "paragraph_length_stdev",
+    ]
+    assert result["scored_features"] == ["first_person_rate"]
+
+
+def test_short_post_keeps_first_person_rate_in_voice_scoring(monkeypatch):
+    profile = {
+        "sample_count": 3,
+        "word_count": 1500,
+        "features": {
+            "paragraph_length_mean": {"mean": 379.7, "stdev": 129.4},
+            "paragraph_length_stdev": {"mean": 0.0, "stdev": 1.0},
+            "first_person_rate": {"mean": 0.039, "stdev": 0.01},
+        },
+    }
+    monkeypatch.setattr(gates.voice, "load_fingerprint", lambda: profile)
+    monkeypatch.setattr(
+        gates.voice,
+        "score_text",
+        lambda draft, profile: {
+            "features": {
+                "paragraph_length_mean": 28.1,
+                "paragraph_length_stdev": 8.0,
+                "first_person_rate": 0.005,
+            },
+            "flags": [],
+            "banned_tells": [],
+        },
+    )
+
+    result = gates.safe_voice_score("A short LinkedIn post.", target_format="short_post")
+
+    assert result["verdict"] == "revise"
+    assert [flag["feature"] for flag in result["flags"]] == ["first_person_rate"]
+
+
 def test_claim_block_dominates_voice_indeterminate(monkeypatch):
     monkeypatch.setattr(gates.voice, "load_fingerprint", lambda: {})
     report = gates.gate(

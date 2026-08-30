@@ -11,6 +11,13 @@ from agent.state import DraftState
 VALID_ACTIONS = {"approve", "edit", "reject", "retry", "escalate", "annotate"}
 
 
+def _available_actions(state: DraftState) -> list[str]:
+    """Return review actions that are safe for the current gate result."""
+
+    actions = VALID_ACTIONS - {"approve"} if state.get("gate_verdict") == "block" else VALID_ACTIONS
+    return sorted(actions)
+
+
 def _review_payload(state: DraftState) -> dict[str, Any]:
     cost_events = state.get("cost_events", [])
     running_cost_usd = round(
@@ -39,7 +46,7 @@ def _review_payload(state: DraftState) -> dict[str, Any]:
         else {},
         "cost_events": cost_events,
         "running_cost_usd": running_cost_usd,
-        "actions": sorted(VALID_ACTIONS),
+        "actions": _available_actions(state),
     }
 
 
@@ -52,6 +59,11 @@ def hitl(state: DraftState) -> dict:
     action = str(response.get("action", "escalate")).lower()
     if action not in VALID_ACTIONS:
         action = "escalate"
+    if action == "approve" and state.get("gate_verdict") == "block":
+        return {
+            "decision": "escalate",
+            "terminal_reason": "Approval refused: the draft is blocked by the factual claims gate.",
+        }
     update: dict[str, Any] = {"decision": action}
     if action == "edit":
         text = str(response.get("draft", "")).strip()

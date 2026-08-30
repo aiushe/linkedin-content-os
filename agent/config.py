@@ -20,6 +20,14 @@ ROUTER_CONFIDENCE_FLOOR = float(os.getenv("ROUTER_CONFIDENCE_FLOOR", "0.70"))
 VOICE_Z_THRESHOLD = float(os.getenv("VOICE_Z_THRESHOLD", "1.5"))
 VOICE_MIN_SAMPLES = int(os.getenv("VOICE_MIN_SAMPLES", "3"))
 VOICE_MIN_WORDS = int(os.getenv("VOICE_MIN_WORDS", "1500"))
+VOICE_SHORT_POST_EXCLUDED_FEATURES = frozenset(
+    feature.strip()
+    for feature in os.getenv(
+        "VOICE_SHORT_POST_EXCLUDED_FEATURES",
+        "paragraph_length_mean,paragraph_length_stdev",
+    ).split(",")
+    if feature.strip()
+)
 MAX_REVISIONS = int(os.getenv("MAX_REVISIONS", "3"))
 CLAIM_REQUIRE_EXACT = os.getenv("CLAIM_REQUIRE_EXACT", "true").lower() in {"1", "true", "yes"}
 

@@ -30,7 +30,7 @@ def deterministic_gate(state: DraftState) -> dict:
     """Graph adapter for the pure-Python deterministic gates."""
 
     allowlist = [AllowedFact(**item) for item in state.get("allowlist", [])]
-    report = run_gate(state.get("draft", ""), allowlist)
+    report = run_gate(state.get("draft", ""), allowlist, target_format="short_post")
     update = {
         "voice_report": report.voice,
         "claims_report": asdict(report.claims),
@@ -102,7 +102,7 @@ def _route_after_write(state: DraftState) -> Literal["gate", "escalate"]:
 
 
 def _route_after_gate(state: DraftState) -> Literal["hitl", "critique", "escalate"]:
-    if state.get("gate_verdict") == "pass":
+    if state.get("gate_verdict") in {"pass", "block"}:
         return "hitl"
     if state.get("gate_verdict") == "revise":
         return "critique"

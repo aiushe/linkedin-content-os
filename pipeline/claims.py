@@ -55,7 +55,7 @@ NUMERIC_RE = re.compile(
     re.IGNORECASE,
 )
 SUPERLATIVE_RE = re.compile(
-    r"\b(?:first|only|fastest|largest|best|number\s+one|industry-leading|best-in-class)\b|#1\b",
+    r"\b(?:best-in-class|industry-leading|number\s+one|first|only|fastest|largest|best)\b|#1\b",
     re.IGNORECASE,
 )
 ATTRIBUTION_RE = re.compile(
@@ -224,6 +224,16 @@ def _is_year(span: str) -> bool:
     return compact.isdigit() and len(compact) == 4 and 1990 <= int(compact) <= 2099
 
 
+def _is_hyphenated_modifier(sentence: str, match: re.Match[str]) -> bool:
+    """Return whether a single-word superlative belongs to a hyphenated compound."""
+
+    if "-" in match.group(0):
+        return False
+    before = sentence[match.start() - 1 : match.start()]
+    after = sentence[match.end() : match.end() + 1]
+    return before == "-" or after == "-"
+
+
 def extract_claims(draft_body: str) -> list[Claim]:
     """Extract auditable claim spans while excluding metadata and list markers."""
 
@@ -253,6 +263,8 @@ def extract_claims(draft_body: str) -> list[Claim]:
                     ):
                         # "First, ..." and "at first" are discourse or temporal markers,
                         # not priority claims.
+                        continue
+                    if kind == "superlative" and _is_hyphenated_modifier(sentence, match):
                         continue
                     key = (line_no, match.start(), kind)
                     if key not in seen:

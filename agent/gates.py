@@ -42,7 +42,9 @@ def _dedupe(values: list[str]) -> list[str]:
     return result
 
 
-def _configured_flags(result: dict[str, Any], profile: dict[str, Any]) -> list[dict[str, Any]]:
+def _configured_flags(
+    result: dict[str, Any], profile: dict[str, Any], *, excluded_features: frozenset[str]
+) -> list[dict[str, Any]]:
     """Re-evaluate score flags with the configured z threshold.
 
     ``pipeline.voice.score_text`` intentionally remains untouched. This wrapper
@@ -53,7 +55,7 @@ def _configured_flags(result: dict[str, Any], profile: dict[str, Any]) -> list[d
     current = result.get("features", {})
     flags: list[dict[str, Any]] = []
     for key, expected in profile.get("features", {}).items():
-        if key not in current or not isinstance(expected, dict):
+        if key in excluded_features or key not in current or not isinstance(expected, dict):
             continue
         mean = expected.get("mean", 0)
         stdev = expected.get("stdev", 0)
@@ -71,12 +73,15 @@ def _configured_flags(result: dict[str, Any], profile: dict[str, Any]) -> list[d
     return flags
 
 
-def safe_voice_score(draft: str) -> dict[str, Any]:
+def safe_voice_score(draft: str, *, target_format: str = "short_post") -> dict[str, Any]:
     """Score voice and refuse to pass when the fingerprint is not meaningful."""
 
     profile = voice.load_fingerprint()
     result = dict(voice.score_text(draft, profile))
-    result["flags"] = _configured_flags(result, profile)
+    excluded_features = (
+        config.VOICE_SHORT_POST_EXCLUDED_FEATURES if target_format == "short_post" else frozenset()
+    )
+    result["flags"] = _configured_flags(result, profile, excluded_features=excluded_features)
     result["banned_tells"] = _dedupe(list(result.get("banned_tells", [])))
     missing_profile = (
         int(profile.get("sample_count") or 0) < config.VOICE_MIN_SAMPLES
@@ -102,6 +107,13 @@ def safe_voice_score(draft: str) -> dict[str, Any]:
             "passes_deterministic_gate": verdict == "pass",
             "profile_sample_count": int(profile.get("sample_count") or 0),
             "profile_word_count": int(profile.get("word_count") or 0),
+            "target_format": target_format,
+            "excluded_features": sorted(excluded_features),
+            "scored_features": sorted(
+                key
+                for key in profile.get("features", {})
+                if key in result.get("features", {}) and key not in excluded_features
+            ),
         }
     )
     return result
@@ -133,10 +145,12 @@ def gate(
     draft: str,
     allowlist: list[claims.AllowedFact] | None = None,
     confidential_terms: set[str] | None = None,
+    *,
+    target_format: str = "short_post",
 ) -> GateReport:
     """Run all deterministic gates without a model or network request."""
 
-    voice_report = safe_voice_score(draft)
+    voice_report = safe_voice_score(draft, target_format=target_format)
     claims_report = claims.check(draft, allowlist)
     confidential_report = confidential.check(draft, confidential_terms)
     return GateReport(
