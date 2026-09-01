@@ -114,6 +114,25 @@ def _prompt(state: DraftState) -> str:
     market_context = render_prompt_block(state.get("market_brief"))
     if market_context:
         prompt += f"\n\n{market_context}"
+    keyword_brief = state.get("keyword_brief")
+    if keyword_brief:
+        role = keyword_brief.get("role_family", "")
+        categories = keyword_brief.get("keywords_by_category", {})
+        positioning = keyword_brief.get("positioning", "")
+        gaps = keyword_brief.get("honest_gaps", [])
+        keyword_block = (
+            f"ROLE TERMINOLOGY (from keyword brief for: {role})\n"
+            "Use these terms naturally where they match the story. Do not force keywords "
+            "that do not fit. Do not claim skills listed under honest gaps.\n\n"
+        )
+        for category, kw_list in categories.items():
+            keyword_block += f"- {category}: {', '.join(kw_list)}\n"
+        if positioning:
+            keyword_block += f"\nPositioning angle: {positioning}\n"
+        if gaps:
+            gap_labels = [g.split("**")[1] if "**" in g else g for g in gaps[:5]]
+            keyword_block += f"\nDo NOT claim: {'; '.join(gap_labels)}\n"
+        prompt += f"\n\n{keyword_block}"
     return prompt + recipient_constraint
 
 

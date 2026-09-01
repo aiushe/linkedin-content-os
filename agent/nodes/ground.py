@@ -20,6 +20,7 @@ from agent.tools import (
     web_search_read,
 )
 from pipeline import common
+from pipeline.common import load_keyword_brief
 
 
 def _hydrate_stories(stories: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -118,8 +119,15 @@ def ground(state: DraftState) -> dict:
         model = "trace_disabled" if config.live_models_enabled() else "offline"
         cost_events = [meter.record(node="ground", model=model)]
 
+    keyword_brief = load_keyword_brief()
+    search_query = state["idea"]
+    if keyword_brief:
+        concepts = keyword_brief.get("concepts", [])[:5]
+        if concepts:
+            search_query = f"{search_query} {' '.join(concepts)}"
+
     try:
-        stories = _hydrate_stories(retrying_story_search(state["idea"]))
+        stories = _hydrate_stories(retrying_story_search(search_query))
     except AgentFailure as failure:
         stories = []
         errors.append(failure.as_record(node="ground"))
@@ -176,7 +184,7 @@ def ground(state: DraftState) -> dict:
             errors.append(failure.as_record(node="ground"))
         else:
             errors.append(failure.as_record(node="ground"))
-    update = {
+    update: dict[str, Any] = {
         "stories": stories,
         "allowlist": allowlist,
         "template": template,
@@ -185,6 +193,8 @@ def ground(state: DraftState) -> dict:
         "errors": errors,
         "cost_events": cost_events,
     }
+    if keyword_brief:
+        update["keyword_brief"] = keyword_brief
     # This is intentionally a fixed post-step, not a ReAct tool. One derived query can
     # therefore yield at most one actor call in a run, and it is never revisited on edits.
     if not state.get("market_fetched") and should_fetch(str(state.get("intent", ""))):

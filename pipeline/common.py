@@ -336,6 +336,79 @@ def parse_scalar(value: str) -> Any:
     return value
 
 
+def load_keyword_brief() -> Optional[Dict[str, Any]]:
+    """Load the most recent keyword brief from private/targets/briefs/.
+
+    Returns a structured dict with role_family, concepts, keywords_by_category, positioning,
+    honest_gaps, and path. Returns None if no brief exists.
+    """
+
+    briefs_dir = PRIVATE / "targets" / "briefs"
+    if not briefs_dir.is_dir():
+        return None
+    files = sorted(briefs_dir.glob("*.md"), reverse=True)
+    if not files:
+        return None
+    path = files[0]
+    text = path.read_text(encoding="utf-8")
+
+    role_family = ""
+    concepts: List[str] = []
+    keywords_by_category: Dict[str, List[str]] = {}
+    positioning = ""
+    honest_gaps: List[str] = []
+
+    section = ""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            section = stripped[3:].strip().lower()
+            continue
+        if stripped.startswith("- Role family:"):
+            role_family = stripped.split(":", 1)[1].strip()
+            continue
+
+        if section == "concept coverage" and stripped.startswith("| ") and " | " in stripped:
+            parts = [cell.strip() for cell in stripped.split("|")]
+            parts = [p for p in parts if p]
+            if len(parts) >= 2 and parts[0] not in ("Concept", "---"):
+                concepts.append(parts[0])
+
+        if section.startswith("keywords by category"):
+            if stripped.startswith("**") and "**" in stripped[2:]:
+                closing = stripped.index("**", 2)
+                category = stripped[2:closing].strip().rstrip(" —\u2014")
+                rest = stripped[closing + 2:].strip().lstrip("—\u2014 ")
+                if rest:
+                    keywords_by_category[category] = [
+                        k.strip() for k in rest.split(",") if k.strip()
+                    ]
+
+        if section == "positioning recommendation":
+            if stripped and not stripped.startswith("#"):
+                if positioning:
+                    positioning += " " + stripped
+                else:
+                    positioning = stripped
+
+        if section == "honest gaps":
+            if stripped.startswith("- **"):
+                gap = stripped.lstrip("- ").strip()
+                honest_gaps.append(gap)
+
+    if not role_family and not concepts:
+        return None
+
+    return {
+        "role_family": role_family,
+        "concepts": concepts,
+        "keywords_by_category": keywords_by_category,
+        "positioning": positioning,
+        "honest_gaps": honest_gaps,
+        "path": str(path.relative_to(ROOT)),
+    }
+
+
 def load_stories() -> List[Dict[str, Any]]:
     stories: List[Dict[str, Any]] = []
     story_dirs = (PRIVATE / "stories", CORPUS / "stories")
