@@ -1,6 +1,6 @@
 """Load the repository's authored skills so the graph uses them instead of re-implementing them.
 
-The eleven files under ``.claude/skills/`` are the playbook. Nodes must not restate that
+The twelve files under ``.claude/skills/`` are the playbook. Nodes must not restate that
 logic inline; they load it here. This follows the progressive-disclosure pattern from the
 Week 3 lectures: the front matter (name + description) is cheap and always available, and a
 skill's full body is pulled into context only when it is actually selected.
@@ -29,6 +29,7 @@ ROLE_SKILLS: dict[str, tuple[str, ...]] = {
     "outreach": ("target-mapper", "comment-drafter"),
     "curation": ("story-bank-curator",),
     "image": ("image-brief",),
+    "dispatch": ("post-dispatcher",),
 }
 
 

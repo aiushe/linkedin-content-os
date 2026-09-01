@@ -4,21 +4,21 @@ from __future__ import annotations
 
 from agent import skills
 
-ALL_ELEVEN = {
+ALL_TWELVE = {
     "authority-post", "comment-drafter", "hook-lab", "image-brief", "jd-keyword-miner",
-    "post-templatizer", "profile-rewriter", "reach-post", "story-bank-curator",
-    "target-mapper", "voice-check",
+    "post-dispatcher", "post-templatizer", "profile-rewriter", "reach-post",
+    "story-bank-curator", "target-mapper", "voice-check",
 }
 
 
 def test_every_authored_skill_is_discovered() -> None:
-    assert set(skills.available()) == ALL_ELEVEN
+    assert set(skills.available()) == ALL_TWELVE
 
 
 def test_every_skill_is_reachable_from_some_role() -> None:
     """No authored skill may be orphaned — that is how the layer got dropped before."""
     mapped = {name for names in skills.ROLE_SKILLS.values() for name in names}
-    assert ALL_ELEVEN - mapped == set(), f"orphaned skills: {ALL_ELEVEN - mapped}"
+    assert ALL_TWELVE - mapped == set(), f"orphaned skills: {ALL_TWELVE - mapped}"
 
 
 def test_profile_rewriter_reference_files_load() -> None:
