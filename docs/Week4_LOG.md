@@ -43,6 +43,13 @@
   $0.000989 to $0.000478, both incidental to avoiding the draft path. Private experiment URL:
   `https://smith.langchain.com/o/6ff42efb-c081-40ba-aa4c-4fba377b79a3/projects/p/07c2276d-f46c-4b13-a010-70b4675c8607`.
 
+## Improvement 2 — preregistration
+
+- Before changing the claim extractor, registered an advisory hedge-plus-number-word pattern.
+  Its primary measurement is deterministic detector recall on the known verbal-quantity fixture:
+  0% to at least 70%, with no false positives on the clean fixtures. It supplements the numeric
+  and superlative extractors and cannot change approval behavior.
+
 ## Phase 1 — instrumentation hardening
 
 - Added a direct LangSmith dependency so tracing is versioned by this project rather than only
