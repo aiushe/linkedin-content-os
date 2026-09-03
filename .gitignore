@@ -61,9 +61,13 @@ drafts/ungated/*
 /evals/.jd_mapping.local.md
 /evals/results/*
 !/evals/results/.gitkeep
+/evals/week4_eval.ipynb
 /docs/week4_traces/*
 !/docs/week4_traces/.gitkeep
 /docs/Week4_Private_Appendix.md
+
+# Local editor settings can expose machine-specific paths and integration configuration.
+/.claude/settings.local.json
 
 # Human-operated outreach logs accumulate personal names and target-company information.
 /ops/outreach-log.md

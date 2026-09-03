@@ -21,6 +21,12 @@ source of truth, `corpus/` as tracked templates, and `intel/` as disposable mark
 6. Nothing publishes automatically. Do not send messages, record outreach activity, or ingest
    private corpus content into external services. Keep `private/`, drafts, and generated market
    data out of git.
+
+   Exception, Week 4 evaluation only (2026-09-02): real-corpus evaluation runs may export prompts,
+   drafts, and retrieved story text to LangSmith under project `lco-eval-w4`, with
+   `MEM0_ENABLED=false` and the confidential-terms gate unconfigured. This exception covers
+   evaluation telemetry only. It does not authorise publishing corpus content to the public
+   repository, and it does not extend to any other external service.
 7. Do not put `#` comments on command lines; interactive zsh treats them specially.
 
 ## Primary inputs

@@ -1,5 +1,30 @@
 # Week 4 execution log
 
+## Phase 4 — live runner, pilot, and baseline
+
+- 2026-09-02 governance decision: `CLAUDE.md` rule 6 now contains the scoped Week 4 exception
+  authorising private LangSmith telemetry under `lco-eval-w4` only. The runner sets
+  `MEM0_ENABLED=false`; the confidential-terms detector is disabled only for this evaluation
+  process. Real-corpus trace sharing remains prohibited; any public trace evidence must use the
+  fixture corpus.
+- Created and tagged the fixed LangSmith dataset `lco-golden` at `v1`. Dataset URL (private,
+  authenticated): `https://smith.langchain.com/o/6ff42efb-c081-40ba-aa4c-4fba377b79a3/datasets/6cef5ef7-c046-4e65-9eb2-a54a827d61b8`.
+  It has 44 cases and matches SHA-256
+  `31947c6fb6d5b13ac706a8fa054f46f47a6d9048e5e147842a60acf0a01bc0de`.
+- Corrected pilot: 5/5 reached the human-review interrupt. Observed p95 latency was **40.00 s**
+  and mean locally priced cost was **$0.001590**. The preregistered guardrail bars are therefore
+  p95 latency at or below **60.01 s** and mean cost per delivered draft at or below **$0.002384**
+  (both 1.5x pilot observations). Private pilot experiment URL:
+  `https://smith.langchain.com/o/6ff42efb-c081-40ba-aa4c-4fba377b79a3/projects/p/1669af68-91e1-45a1-b03b-f17698d123b6`.
+- API-only trace verification confirmed the per-case run name and Week 4 metadata schema, nested
+  `ground` and `gate` children, and LLM token/cost fields. The platform wraps each evaluation
+  target in a generic root run, so `case:{id}` is the named nested case chain rather than the
+  outer experiment wrapper. One nested LLM child retained zero provider usage, an explicit known
+  provider-metadata limitation rather than an inferred cost.
+- Screenshot blocker: the in-app browser is unavailable in this environment. No trace screenshots
+  were captured. Keep markdown/API trace summaries as the interim substitute and capture the
+  required redacted screenshots manually from authenticated LangSmith before submission.
+
 ## Phase 1 — instrumentation hardening
 
 - Added a direct LangSmith dependency so tracing is versioned by this project rather than only

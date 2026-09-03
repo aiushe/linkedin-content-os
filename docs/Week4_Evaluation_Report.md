@@ -18,7 +18,7 @@ run metadata.
 | Metrics | Claim-leak rate; story top-1/top-3; mean absolute voice z; intent task completion; cost per delivered draft and p95 latency. |
 | Judge method | Code evaluators plus a calibrated LLM-as-judge grounding-faithfulness evaluator. |
 | Golden dataset | Private reviewer package: 44 hand-reviewed cases, version `v1`; SHA-256 recorded below. |
-| Pass bar | Zero numeric leaks; hedged leak at or below 30%; top-1 at or above 85%; mean voice \|z\| at or below 1.0; intent completion 100%; cost and latency bars TBD after pilot. |
+| Pass bar | Zero numeric leaks; hedged leak at or below 30%; top-1 at or above 85%; mean voice \|z\| at or below 1.0; intent completion 100%; mean locally priced cost at or below $0.002384 per delivered draft; p95 latency at or below 60.01 s. |
 | Instrumentation | One parent trace per case with node-level child runs, versioned prompts, run-group tags, and outcome metadata. |
 | Baseline | TBD. |
 | Failure analysis | TBD. |
@@ -46,7 +46,7 @@ include `n=21` and a confidence interval.
 
 ## 5. Instrumentation and privacy boundary
 
-The graph records one `case:{id}` trace with nested node runs, including a `gate` child chain.
+The graph records one `case:{id}` chain with nested node runs, including a `gate` child chain.
 Every case carries case, dataset, model, prompt-version, and run-group metadata; its completed
 state also yields error classes, error nodes, and degradation reasons.
 
@@ -60,21 +60,55 @@ The dataset and per-case results are withheld from the public repository as a de
 boundary. Public materials report aggregate methods and findings only: no verbatim allowed facts,
 per-case draft text, real source identifiers, target names, or trace links are published. Dataset
 SHA-256: `31947c6fb6d5b13ac706a8fa054f46f47a6d9048e5e147842a60acf0a01bc0de`. The matching
-dataset, results, and private reviewer appendix are provided directly to reviewers.
+dataset, results, and private reviewer appendix are provided directly to reviewers. The five-case
+pilot set the latency bar at 60.01 seconds (1.5x observed p95 of 40.00 seconds) and the locally
+priced cost bar at $0.002384 per delivered draft (1.5x observed mean of $0.001590).
 
 ## 6. Baseline results
 
-TBD.
+The fixed v1 baseline completed all 44 cases. All 44 produced a draft and reached the human
+review interrupt. Aggregate results are shown below; per-case outputs remain in the local reviewer
+package.
+
+| Metric | Baseline | Basis | Pass bar |
+| --- | ---: | --- | ---: |
+| Story top-1 | 52.38% (11/21; 95% CI 32.37–71.66%) | 21 reviewed story-labelled cases | 85% |
+| Story top-3 | 76.19% (16/21) | Same denominator | Secondary |
+| Mean voice \|z\| | 1.925 | 44 generated drafts | 1.0 |
+| Intent completion | 31.82% (14/44) | Exact labelled trajectory | 100% |
+| Draft delivered | 100% (44/44) | Draft plus `hitl` interrupt | Informational |
+| Numeric planted-claim leak | 0% | 3 numeric-labelled cases | 0% |
+| Hedged planted-claim leak | 0% | 1 hedged-labelled case | at or below 30% |
+| p95 latency | 38.19 s | 44 completed cases | 60.01 s |
+| Mean locally priced cost | $0.000989 | Delivered drafts | $0.002384 |
+
+The total locally priced baseline cost was $0.043524. Provider usage metadata contained one
+zero-usage nested child run, which remains explicitly unpriced rather than being filled with an
+estimate. The grounding-faithfulness judge was not run because the required human calibration
+labels do not yet exist.
 
 ## 7. Failure analysis
 
-TBD.
+Failures were clustered by failed metric, labelled intent, and case kind from the private run
+export. No individual corpus content or trace link is reproduced here.
+
+| Cluster | Result | Frequency | Human-rework estimate | Evidence |
+| --- | --- | ---: | ---: | --- |
+| C1 — profile/outreach fall-through | Confirmed. All 12 labelled profile-rewrite or outreach cases entered the standard drafting path even when their router intent was correct. | 12/44 | 20–40 min per occurrence, modeled pending human review | Private trace metadata and local trajectory export |
+| C2 — wrong story retrieved | Confirmed as a quality failure (10/21 top-1 misses), but the predicted full-text clustering cause is refuted: structural clustering was already present. The remaining issue is transparent lexical ranking with weak discrimination. | 10/21 eligible | 5–10 min per occurrence, modeled pending human review | Private run export |
+| C3 — latency tail | Refuted. No baseline case exceeded the pilot-derived 60.01 s guardrail; p95 was 38.19 s. | 0/44 | Not applicable | Private run export |
+| U1 — routing/decline gap | Unpredicted. The live router matched the expected intent on 31/44 cases, and none of the five out-of-scope cases met the required graceful-decline behavior. | 18 trajectory failures after separating C1 | Human review required; no measured minutes yet | Private run export |
+| U2 — voice distance | Unpredicted. All 44 generated drafts exceeded the mean \|z\| pass bar. | 44/44 | Human voice review required | Private run export |
+
+The rework-minute figures are transparent planning estimates, not human-observed measurements.
+The 10-case human-review subset is prepared separately and is the required next input to replace
+those estimates with observed review time.
 
 ## 8. Improvements and measured deltas
 
 | Lever | Change | Cluster targeted | Predicted delta | Measured delta |
 | --- | --- | --- | --- | --- |
-| Control flow | TBD | C1 | Intent completion 60% to 100% | TBD |
+| Control flow | TBD | C1 | Intent completion approximately 60% to 100% | TBD |
 | Guardrail | TBD | Hedged claims | Hedged recall 0% to at least 70% | TBD |
 | Retrieval | TBD | Story top-1 +15pp | TBD | TBD |
 | Latency | TBD | C3 | p95 latency -40% | TBD |

@@ -8,6 +8,7 @@ of the public repository.
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,6 +37,12 @@ def terms_path() -> Path:
 def load_terms(path: Path | None = None) -> set[str] | None:
     """Read one Markdown-list term per line, ignoring comments and placeholders."""
 
+    if os.getenv("CONFIDENTIAL_TERMS_ENABLED", "true").lower() not in {
+        "1",
+        "true",
+        "yes",
+    }:
+        return None
     source = path or terms_path()
     if not source.is_file():
         return None
