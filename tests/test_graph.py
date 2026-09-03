@@ -268,6 +268,48 @@ def test_out_of_scope_request_still_reaches_a_draft(synthetic_corpus, monkeypatc
     assert graph.get_state(run_config).next == ("hitl",)
 
 
+def test_profile_rewrite_routes_to_preflight_without_drafting(synthetic_corpus, monkeypatch):
+    monkeypatch.setenv("AGENT_OFFLINE", "1")
+    graph = build_graph()
+    run_config = {"configurable": {"thread_id": "profile-preflight"}}
+
+    graph.invoke(
+        {
+            "idea": "Rewrite my LinkedIn profile for a focused role.",
+            "thread_id": "profile-preflight",
+            "forced_intent": "profile_rewrite",
+            "revision": 0,
+        },
+        config=run_config,
+    )
+
+    state = graph.get_state(run_config).values
+    assert state["intent"] == "profile_rewrite"
+    assert "profile_analysis" in state
+    assert not state.get("draft")
+
+
+def test_outreach_routes_to_manual_guidance_without_drafting(synthetic_corpus, monkeypatch):
+    monkeypatch.setenv("AGENT_OFFLINE", "1")
+    graph = build_graph()
+    run_config = {"configurable": {"thread_id": "outreach-guidance"}}
+
+    graph.invoke(
+        {
+            "idea": "I applied and need a manual target map.",
+            "thread_id": "outreach-guidance",
+            "forced_intent": "outreach",
+            "revision": 0,
+        },
+        config=run_config,
+    )
+
+    state = graph.get_state(run_config).values
+    assert state["intent"] == "outreach"
+    assert state["ops_guidance"]["manual_only"] is True
+    assert not state.get("draft")
+
+
 def test_empty_index_degrades_but_still_reaches_a_draft(synthetic_corpus, monkeypatch):
     monkeypatch.setenv("AGENT_OFFLINE", "1")
     monkeypatch.setenv("FAULT_EMPTY_INDEX", "1")

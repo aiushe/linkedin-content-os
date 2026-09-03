@@ -108,7 +108,7 @@ those estimates with observed review time.
 
 | Lever | Change | Cluster targeted | Predicted delta | Measured delta |
 | --- | --- | --- | --- | --- |
-| Control flow | **Pre-registered before `improved-1`:** route `profile_rewrite` and `outreach` after intake instead of falling through to drafting. | C1 | Intent completion approximately 60% to 100%; +12 exact-trajectory cases, with router errors unchanged. | TBD |
+| Control flow | Routed `profile_rewrite` and `outreach` after intake instead of falling through to drafting. | C1 | Intent completion approximately 60% to 100%; +12 exact-trajectory cases, with router errors unchanged. | Intent completion **31.82% → 59.09%** (+27.27pp; exactly 12 corrected paths). Missed the rounded 60% prediction by 0.91pp. Story top-1 regressed **52.38% → 47.62%** (-4.76pp). Draft-delivery rate fell **100% → 68.18%** because the two newly correct read-only workflows intentionally terminate without a draft; this makes the generic delivered-draft metric inapplicable to those endpoints. |
 | Guardrail | TBD | Hedged claims | Hedged recall 0% to at least 70% | TBD |
 | Retrieval | TBD | Story top-1 +15pp | TBD | TBD |
 | Latency | TBD | C3 | p95 latency -40% | TBD |

@@ -17,6 +17,8 @@ from .nodes.critique import critique
 from .nodes.ground import ground
 from .nodes.hitl import hitl
 from .nodes.memory import recall_profile_memory
+from .nodes.outreach import outreach
+from .nodes.profile_rewrite import profile_rewrite
 from .nodes.router import intake_router
 from .nodes.write import write
 from .state import DraftState
@@ -37,9 +39,16 @@ def deterministic_gate(state: DraftState) -> dict:
     return update
 
 
-def _route_after_router(_: DraftState) -> Literal["ground"]:
-    """Every request reaches drafting; the router only supplies a suggested format."""
+def _route_after_router(
+    state: DraftState,
+) -> Literal["ground", "profile_rewrite", "outreach"]:
+    """Route focused, read-only workflows before the standard drafting path."""
 
+    intent = state.get("intent")
+    if intent == "profile_rewrite":
+        return "profile_rewrite"
+    if intent == "outreach":
+        return "outreach"
     return "ground"
 
 
@@ -88,6 +97,8 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     workflow = StateGraph(DraftState)
     workflow.add_node("profile_memory", recall_profile_memory)
     workflow.add_node("intake_router", intake_router)
+    workflow.add_node("profile_rewrite", profile_rewrite)
+    workflow.add_node("outreach", outreach)
     workflow.add_node("ground", ground)
     workflow.add_node("write", write)
     workflow.add_node("gate", deterministic_gate)
@@ -101,8 +112,12 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
         _route_after_router,
         {
             "ground": "ground",
+            "profile_rewrite": "profile_rewrite",
+            "outreach": "outreach",
         },
     )
+    workflow.add_edge("profile_rewrite", END)
+    workflow.add_edge("outreach", END)
     workflow.add_conditional_edges(
         "ground", _route_after_ground, {"write": "write"}
     )

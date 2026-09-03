@@ -32,6 +32,17 @@
   predicts intent completion rising from 31.82% to approximately 59.09% before any router or
   out-of-scope correction; no other metric is expected to improve directly.
 
+## Improvement 1 — measured
+
+- Private `improved-1` experiment completed all 44 fixed v1 cases. Intent completion rose from
+  31.82% to 59.09% (+27.27pp, 12 trajectories), just below the rounded 60% prediction. Retrieval
+  top-1 regressed from 52.38% to 47.62% (-4.76pp). The generic draft-delivery rate fell from 100%
+  to 68.18% because the newly correct profile and outreach endpoints intentionally return
+  preflight/manual guidance rather than a draft and `hitl`; this is retained and reported, not
+  hidden. p95 latency fell 38.19 s to 21.65 s and mean locally priced delivered-draft cost fell
+  $0.000989 to $0.000478, both incidental to avoiding the draft path. Private experiment URL:
+  `https://smith.langchain.com/o/6ff42efb-c081-40ba-aa4c-4fba377b79a3/projects/p/07c2276d-f46c-4b13-a010-70b4675c8607`.
+
 ## Phase 1 — instrumentation hardening
 
 - Added a direct LangSmith dependency so tracing is versioned by this project rather than only
