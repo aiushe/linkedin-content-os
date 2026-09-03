@@ -50,6 +50,14 @@
   0% to at least 70%, with no false positives on the clean fixtures. It supplements the numeric
   and superlative extractors and cannot change approval behavior.
 
+## Improvement 2 — measured
+
+- The known verbal-quantity fixture moved from the documented 0% detector recall to 100% with
+  no clean-fixture false positives. The private `improved-2` run completed 44 v1 cases; its one
+  live hedged case remained labelled in both variants, so it does not independently estimate a
+  live recall delta. The guardrail remains advisory. Private experiment URL:
+  `https://smith.langchain.com/o/6ff42efb-c081-40ba-aa4c-4fba377b79a3/projects/p/a52a0930-a7f1-4a4e-a836-426b47308286`.
+
 ## Phase 1 — instrumentation hardening
 
 - Added a direct LangSmith dependency so tracing is versioned by this project rather than only

@@ -109,7 +109,7 @@ those estimates with observed review time.
 | Lever | Change | Cluster targeted | Predicted delta | Measured delta |
 | --- | --- | --- | --- | --- |
 | Control flow | Routed `profile_rewrite` and `outreach` after intake instead of falling through to drafting. | C1 | Intent completion approximately 60% to 100%; +12 exact-trajectory cases, with router errors unchanged. | Intent completion **31.82% → 59.09%** (+27.27pp; exactly 12 corrected paths). Missed the rounded 60% prediction by 0.91pp. Story top-1 regressed **52.38% → 47.62%** (-4.76pp). Draft-delivery rate fell **100% → 68.18%** because the two newly correct read-only workflows intentionally terminate without a draft; this makes the generic delivered-draft metric inapplicable to those endpoints. |
-| Guardrail | **Pre-registered before `improved-2`:** add an advisory hedge-plus-number-word regex alongside the existing extractor. | Hedged claims | Direct hedge-detection recall 0% to at least 70%, with no clean-fixture false positives. The one live hedged case is retained as a secondary outcome. | TBD |
+| Guardrail | Added an advisory hedge-plus-number-word regex alongside the existing extractor. | Hedged claims | Direct hedge-detection recall 0% to at least 70%, with no clean-fixture false positives. The one live hedged case is retained as a secondary outcome. | Direct known verbal-quantity fixture recall **0% → 100%**; clean-fixture precision remained 100%. The live hedged leak stayed 0% because both runs labelled the planted phrase. |
 | Retrieval | TBD | Story top-1 +15pp | TBD | TBD |
 | Latency | TBD | C3 | p95 latency -40% | TBD |
 

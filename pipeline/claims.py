@@ -16,7 +16,7 @@ from agent import config
 
 from . import common
 
-ClaimKind = Literal["numeric", "superlative", "attribution"]
+ClaimKind = Literal["numeric", "hedged", "superlative", "attribution"]
 ClaimVerdict = Literal["pass", "warn"]
 FactSource = Literal["truth_table", "story_metric"]
 
@@ -57,6 +57,12 @@ TABLE_SEPARATOR_RE = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|
 NUMERIC_RE = re.compile(
     r"(?<![\w#])\d[\d,]*(?:\.\d+)?(?:\s*(?:%|percent\b|x\b|k\b|m\b|"
     r"hours?\b|days?\b|weeks?\b|users?\b|customers?\b|tickets?\b|reps?\b))?",
+    re.IGNORECASE,
+)
+HEDGED_QUANTITY_RE = re.compile(
+    r"\b(?:roughly|about|around|almost|nearly|over|under|more\s+than|less\s+than)\s+"
+    r"(?:an?\s+)?(?:half|quarter|third|few|several|dozen|hundred|thousand|million|"
+    r"one|two|three|four|five|six|seven|eight|nine|ten)\b",
     re.IGNORECASE,
 )
 SUPERLATIVE_RE = re.compile(
@@ -306,6 +312,7 @@ def extract_claims(draft_body: str) -> list[Claim]:
                 continue
             for pattern, kind in (
                 (NUMERIC_RE, "numeric"),
+                (HEDGED_QUANTITY_RE, "hedged"),
                 (SUPERLATIVE_RE, "superlative"),
                 (ATTRIBUTION_RE, "attribution"),
             ):

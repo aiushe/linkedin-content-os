@@ -144,6 +144,21 @@ def test_attribution_is_reported_as_an_unresolved_claim(synthetic_corpus):
     assert report.unmatched[0].span == "Our data shows"
 
 
+def test_hedged_quantity_is_an_advisory_unresolved_claim(synthetic_corpus):
+    report = claims.check("I resolved roughly half the tickets.", claims.load_allowlist())
+
+    assert report.verdict == "warn"
+    assert [(claim.span.lower(), claim.kind) for claim in report.unmatched] == [
+        ("roughly half", "hedged")
+    ]
+
+
+def test_hedge_without_a_quantity_word_is_not_a_claim(synthetic_corpus):
+    report = claims.check("I usually start by reading the evidence.", claims.load_allowlist())
+
+    assert report.verdict == "pass"
+
+
 def test_narrative_only_context_warns_on_quantification(synthetic_corpus):
     report = claims.check(
         "I volunteered to build product demos 2x faster while in support.", claims.load_allowlist()
