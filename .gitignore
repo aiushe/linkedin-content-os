@@ -52,3 +52,19 @@ drafts/ungated/*
 !drafts/approved/.gitkeep
 !drafts/published/.gitkeep
 !drafts/ungated/.gitkeep
+
+# Week 4 reviewer-only evaluation artifacts. The public repository contains aggregate methods
+# and metrics only; datasets, trace evidence, target mappings, and per-case results stay local.
+/evals/golden_v2.jsonl
+/evals/golden_v2_review.md
+/evals/golden_v2_corrections.md
+/evals/.jd_mapping.local.md
+/evals/results/*
+!/evals/results/.gitkeep
+/docs/week4_traces/*
+!/docs/week4_traces/.gitkeep
+/docs/Week4_Private_Appendix.md
+
+# Human-operated outreach logs accumulate personal names and target-company information.
+/ops/outreach-log.md
+/ops/engagement-queue.md

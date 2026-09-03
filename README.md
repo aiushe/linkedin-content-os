@@ -203,7 +203,7 @@ Idea / rough thought
 | Pipeline | Input | Output | LLM? |
 |---|---|---|---|
 | `claims.py` | Draft text + truth table | Grounded/ungrounded claim report | No |
-| `voice.py` | Draft text + voice samples | Fingerprint scores + tell flags | No |
+| `voice.py` | Draft text + voice samples | Style-profile scores + tell flags | No |
 | `confidential.py` | Draft text + term list | Advisory match report | No |
 | `normalize.py` | Raw Apify payload | Canonical post records | No |
 | `embed.py` | Post/story text | Vectors + content-hash cache | Yes (embedding API) |
