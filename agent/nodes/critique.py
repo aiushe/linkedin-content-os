@@ -11,6 +11,8 @@ from agent.models import CostMeter, get_model, invoke_with_deadline
 from agent.skills import role_block
 from agent.state import DraftState
 
+CRITIQUE_PROMPT_VERSION = "w3-baseline"
+
 
 class CritiqueOutput(BaseModel):
     verdict: Literal["pass", "warn", "revise"]
@@ -58,9 +60,9 @@ def critique(state: DraftState) -> dict:
     if config.live_models_enabled():
         try:
             output = invoke_with_deadline(
-                lambda: get_model("critic", callbacks=[meter])
+                lambda: get_model("critic")
                 .with_structured_output(CritiqueOutput)
-                .invoke(_prompt(state))
+                .invoke(_prompt(state), config={"callbacks": [meter]})
             )
             event = meter.event_or_zero(node="critique", model=config.MODEL_CRITIC)
         except Exception:

@@ -13,6 +13,8 @@ from agent.skills import role_block
 from agent.state import DraftState
 from pipeline import voice
 
+WRITE_PROMPT_VERSION = "w3-baseline"
+
 
 class DraftOutput(BaseModel):
     body: str
@@ -142,9 +144,11 @@ def write(state: DraftState) -> dict:
     meter = CostMeter(node="write", model=config.MODEL_WRITER)
     if config.live_models_enabled():
         try:
-            model = get_model("writer", callbacks=[meter])
+            model = get_model("writer")
             response = invoke_with_deadline(
-                lambda: model.with_structured_output(DraftOutput).invoke(_prompt(state))
+                lambda: model.with_structured_output(DraftOutput).invoke(
+                    _prompt(state), config={"callbacks": [meter]}
+                )
             )
             output = response
             event = meter.event_or_zero(node="write", model=config.MODEL_WRITER)

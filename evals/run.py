@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
+import signal
 import statistics
 import sys
 import time
@@ -16,6 +17,17 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 EVAL_CASE_TIMEOUT_SECONDS = float(os.getenv("EVAL_CASE_TIMEOUT_SECONDS", "240"))
+
+
+def flush_tracers() -> None:
+    """Flush LangSmith tracing across supported LangChain/LangSmith versions."""
+
+    try:
+        from langsmith.utils import wait_for_all_tracers
+    except ImportError:
+        from langchain_core.tracers.langchain import wait_for_all_tracers
+
+    wait_for_all_tracers()
 
 
 def configure_fixture_corpus() -> None:
@@ -51,6 +63,8 @@ def case_passed(result: dict[str, Any]) -> bool:
 
 
 def run_case(graph: Any, case: dict[str, Any]) -> dict[str, Any]:
+    from evals.metadata import attach_outcome_metadata
+
     thread_id = f"eval-{case['id']}"
     run_config = {"configurable": {"thread_id": thread_id}}
     started = time.perf_counter()
@@ -87,6 +101,7 @@ def run_case(graph: Any, case: dict[str, Any]) -> dict[str, Any]:
         "degradation_reasons": state.get("degradation_reasons", []),
         "note": case.get("note"),
     }
+    result["trace_metadata"] = attach_outcome_metadata(state)
     result["passed"] = case_passed(result)
     return result
 
@@ -124,10 +139,13 @@ def timed_out_result(case: dict[str, Any], timeout_seconds: float) -> dict[str, 
 def _live_case_worker(case: dict[str, Any], result_queue: Any) -> None:
     """Build graph state in an isolated process so a stalled provider call is killable."""
 
-    configure_fixture_corpus()
-    from agent.graph import build_graph
+    try:
+        configure_fixture_corpus()
+        from agent.graph import build_graph
 
-    result_queue.put(run_case(build_graph(), case))
+        result_queue.put(run_case(build_graph(), case))
+    finally:
+        flush_tracers()
 
 
 def run_live_case(case: dict[str, Any], timeout_seconds: float) -> dict[str, Any]:
@@ -147,8 +165,12 @@ def run_live_case(case: dict[str, Any], timeout_seconds: float) -> dict[str, Any
         result_queue.close()
         raise
     if process.is_alive():
-        process.terminate()
-        process.join()
+        if process.pid is not None:
+            os.kill(process.pid, signal.SIGINT)
+        process.join(5)
+        if process.is_alive():
+            process.terminate()
+            process.join()
         result_queue.close()
         return timed_out_result(case, round(time.perf_counter() - started, 4))
     try:

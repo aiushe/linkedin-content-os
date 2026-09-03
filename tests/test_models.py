@@ -25,6 +25,8 @@ def test_model_factory_bounds_each_provider_request(monkeypatch) -> None:
     assert captured["timeout"] == config.LLM_TIMEOUT_SECONDS
     assert captured["max_retries"] == 0
     assert captured["temperature"] == config.WRITER_TEMPERATURE
+    assert captured["max_tokens"] == config.WRITER_MAX_TOKENS
+    assert captured["extra_body"] == {"chat_template_kwargs": {"enable_thinking": False}}
 
 
 def test_model_factory_forwards_an_explicit_seed(monkeypatch) -> None:
@@ -40,6 +42,28 @@ def test_model_factory_forwards_an_explicit_seed(monkeypatch) -> None:
     models.get_model("writer")
 
     assert captured["seed"] == 17
+
+
+def test_cost_meter_adds_explicit_usage_cost_to_a_traced_llm_run(monkeypatch) -> None:
+    monkeypatch.setitem(models.MODEL_PRICES, "priced-model", (1.0, 2.0))
+    meter = models.CostMeter(node="write", model="priced-model")
+    message = SimpleNamespace(usage_metadata={})
+    response = SimpleNamespace(
+        usage_metadata={"input_tokens": 100, "output_tokens": 50},
+        llm_output=None,
+        generations=[[SimpleNamespace(message=message)]],
+    )
+
+    meter.on_llm_end(response, run_id="run-123")
+
+    assert message.usage_metadata == {
+        "input_tokens": 100,
+        "output_tokens": 50,
+        "total_tokens": 150,
+        "input_cost": 0.0001,
+        "output_cost": 0.0001,
+        "total_cost": 0.0002,
+    }
 
 
 def test_hard_deadline_interrupts_a_blocking_main_thread_call(monkeypatch) -> None:

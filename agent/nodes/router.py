@@ -10,6 +10,8 @@ from agent import config
 from agent.models import CostMeter, get_model, invoke_with_deadline
 from agent.state import DraftState
 
+ROUTER_PROMPT_VERSION = "w3-baseline"
+
 
 class IntentDecision(BaseModel):
     intent: Literal[
@@ -89,9 +91,11 @@ def intake_router(state: DraftState) -> dict:
             f"Request: {state['idea']}"
         )
         try:
-            model = get_model("router", callbacks=[meter])
+            model = get_model("router")
             response = invoke_with_deadline(
-                lambda: model.with_structured_output(IntentDecision).invoke(prompt)
+                lambda: model.with_structured_output(IntentDecision).invoke(
+                    prompt, config={"callbacks": [meter]}
+                )
             )
             decision = response
             event = meter.event_or_zero(node="intake_router", model=config.MODEL_ROUTER)

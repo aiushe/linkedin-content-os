@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
+from langsmith import traceable
 
 from pipeline.claims import AllowedFact
 
@@ -21,6 +22,7 @@ from .nodes.write import write
 from .state import DraftState
 
 
+@traceable(name="gate", run_type="chain")
 def deterministic_gate(state: DraftState) -> dict:
     """Graph adapter for the pure-Python deterministic gates."""
 

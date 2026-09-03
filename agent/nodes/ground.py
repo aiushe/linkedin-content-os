@@ -46,11 +46,11 @@ def _run_live_react(idea: str, meter: CostMeter) -> None:
     )
     invoke_with_deadline(
         lambda: create_agent(
-            get_model("router", callbacks=[meter]), get_read_tools(), system_prompt=system_prompt
+            get_model("router"), get_read_tools(), system_prompt=system_prompt
         ).invoke(
             {"messages": [{"role": "user", "content": idea}]},
             # Breakout condition: an unbounded ReAct loop is the runaway failure mode.
-            config={"recursion_limit": config.GROUND_RECURSION_LIMIT},
+            config={"recursion_limit": config.GROUND_RECURSION_LIMIT, "callbacks": [meter]},
         )
     )
 

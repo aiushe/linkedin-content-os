@@ -53,6 +53,12 @@ MODEL_ROUTER = os.getenv("MODEL_ROUTER", "gpt-4o-mini")
 MODEL_WRITER = os.getenv("MODEL_WRITER", "gpt-4.1")
 MODEL_CRITIC = os.getenv("MODEL_CRITIC", "gpt-4o-mini")
 WRITER_TEMPERATURE = float(os.getenv("WRITER_TEMPERATURE", "0"))
+WRITER_MAX_TOKENS = int(os.getenv("WRITER_MAX_TOKENS", "1200"))
+LLM_DISABLE_THINKING = os.getenv("LLM_DISABLE_THINKING", "true").lower() in {
+    "1",
+    "true",
+    "yes",
+}
 _llm_seed = os.getenv("LLM_SEED", "").strip()
 LLM_SEED = int(_llm_seed) if _llm_seed else None
 # Bound each provider request so an unavailable provider becomes a visible availability note.

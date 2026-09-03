@@ -80,7 +80,44 @@ def price_for(model: str) -> tuple[float, float] | None:
     return MODEL_PRICES.get(model)
 
 
-def get_model(role: ModelRole, *, callbacks: list[Any] | None = None) -> Any:
+def _usage_metadata(event: dict[str, float | int | str]) -> dict[str, float | int]:
+    """Translate a cost event into LangSmith's explicit usage-cost schema."""
+
+    prompt_tokens = int(event["prompt_tokens"])
+    completion_tokens = int(event["completion_tokens"])
+    rates = price_for(str(event["model"]))
+    input_cost = 0.0
+    output_cost = 0.0
+    if rates is not None:
+        input_cost = prompt_tokens * rates[0] / 1_000_000
+        output_cost = completion_tokens * rates[1] / 1_000_000
+    return {
+        "input_tokens": prompt_tokens,
+        "output_tokens": completion_tokens,
+        "total_tokens": prompt_tokens + completion_tokens,
+        "input_cost": round(input_cost, 8),
+        "output_cost": round(output_cost, 8),
+        "total_cost": round(input_cost + output_cost, 8),
+    }
+
+
+def _set_response_usage_metadata(response: Any, event: dict[str, float | int | str]) -> None:
+    """Enrich LLM results before LangChain's tracer serialises its child run.
+
+    LangSmith does not maintain pricing for every OpenAI-compatible provider model. The local
+    cost meter is the source of truth for those configured rates, so it adds standard cost fields
+    to the same message usage metadata LangChain's tracer persists. This avoids a second update
+    request, which LangSmith rejects after a child run is complete.
+    """
+
+    for generation_batch in getattr(response, "generations", []) or []:
+        for generation in generation_batch:
+            message = getattr(generation, "message", None)
+            if message is not None:
+                message.usage_metadata = _usage_metadata(event)
+
+
+def get_model(role: ModelRole) -> Any:
     """Return the configured ChatOpenAI model for a graph role."""
 
     from langchain_openai import ChatOpenAI
@@ -88,12 +125,15 @@ def get_model(role: ModelRole, *, callbacks: list[Any] | None = None) -> Any:
     options: dict[str, Any] = {
         "model": MODEL_BY_ROLE[role],
         "temperature": config.WRITER_TEMPERATURE if role == "writer" else 0.2,
-        "callbacks": callbacks or [],
         "timeout": config.LLM_TIMEOUT_SECONDS,
         # A request timeout must remain a real upper bound. Retrying a stalled request
         # inside the provider client would multiply that bound before the graph can report it.
         "max_retries": 0,
     }
+    if role == "writer":
+        options["max_tokens"] = config.WRITER_MAX_TOKENS
+    if config.LLM_DISABLE_THINKING and MODEL_BY_ROLE[role].lower().startswith("qwen/"):
+        options["extra_body"] = {"chat_template_kwargs": {"enable_thinking": False}}
     if config.LLM_BASE_URL:
         options["base_url"] = config.LLM_BASE_URL
     if config.LLM_SEED is not None:
@@ -119,7 +159,7 @@ def _usage_from(response: Any) -> dict[str, int]:
     }
 
 
-@dataclass
+@dataclass(eq=False)
 class CostMeter(BaseCallbackHandler):
     """Collect per-node model usage for state and eval reporting."""
 
@@ -153,14 +193,15 @@ class CostMeter(BaseCallbackHandler):
     ) -> dict[str, float | int | str]:
         return self.record(node=node, model=model, **_usage_from(response))
 
-    def on_llm_end(self, response: Any, **_: Any) -> None:
+    def on_llm_end(self, response: Any, **kwargs: Any) -> None:
         """LangChain callback hook used by live model nodes."""
 
-        self.record(
+        event = self.record(
             node=self.node or "unknown",
             model=self.model or "unknown",
             **_usage_from(response),
         )
+        _set_response_usage_metadata(response, event)
 
     def event_or_zero(self, *, node: str, model: str) -> dict[str, float | int | str]:
         """Return callback usage, or an explicit zero event for unavailable metadata."""
