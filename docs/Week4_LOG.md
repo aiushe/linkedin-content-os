@@ -58,6 +58,12 @@
   live recall delta. The guardrail remains advisory. Private experiment URL:
   `https://smith.langchain.com/o/6ff42efb-c081-40ba-aa4c-4fba377b79a3/projects/p/a52a0930-a7f1-4a4e-a836-426b47308286`.
 
+## Improvement 3 — preregistration
+
+- Before changing retrieval, registered a transparent ordering change: verified metric text that
+  overlaps the idea ranks ahead of general title/body lexical overlap. The predicted effect is
+  +15pp top-1 on the fixed 21-case retrieval denominator; topical but nonmetric cases may regress.
+
 ## Phase 1 — instrumentation hardening
 
 - Added a direct LangSmith dependency so tracing is versioned by this project rather than only
