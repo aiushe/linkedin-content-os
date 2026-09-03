@@ -64,6 +64,14 @@
   overlaps the idea ranks ahead of general title/body lexical overlap. The predicted effect is
   +15pp top-1 on the fixed 21-case retrieval denominator; topical but nonmetric cases may regress.
 
+## Improvement 3 — measured
+
+- Private `improved-3` completed 44 fixed v1 cases. The prediction failed: story top-1 regressed
+  52.38% to 47.62% and top-3 76.19% to 71.43%. The ranker is not retained as the production
+  ordering; the failure supports a future hybrid ranker rather than a metric-first replacement.
+  Private experiment URL:
+  `https://smith.langchain.com/o/6ff42efb-c081-40ba-aa4c-4fba377b79a3/projects/p/a339b7bd-84c1-4b5e-9b79-147856b0476e`.
+
 ## Phase 1 — instrumentation hardening
 
 - Added a direct LangSmith dependency so tracing is versioned by this project rather than only

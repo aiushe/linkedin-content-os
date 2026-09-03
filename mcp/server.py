@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 import numpy as np
 from fastmcp import FastMCP
@@ -43,6 +43,17 @@ def cosine(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / denominator) if denominator else 0.0
 
 
+def verified_metric_overlap(query_terms: list[str], story: Mapping[str, Any]) -> int:
+    """Count transparent idea-term matches in verified metrics only."""
+
+    metric_text = " ".join(
+        str(metric.get("claim") or "").lower()
+        for metric in story.get("metrics", [])
+        if isinstance(metric, dict) and metric.get("verified") is True
+    )
+    return sum(term in metric_text for term in query_terms)
+
+
 @mcp.tool()
 def search_stories(
     query: str,
@@ -66,10 +77,13 @@ def search_stories(
             str(story.get(key) or "")
             for key in ("title", "tension", "turn", "result", "lesson", "role_context")
         ).lower()
-        score = sum(term in text for term in query_terms)
-        results.append((score, story))
-    results.sort(key=lambda item: (item[0], str(item[1].get("date") or "")), reverse=True)
-    return [story for _, story in results[: max(1, min(k, 20))]]
+        lexical_score = sum(term in text for term in query_terms)
+        metric_score = verified_metric_overlap(query_terms, story)
+        results.append((metric_score, lexical_score, story))
+    results.sort(
+        key=lambda item: (item[0], item[1], str(item[2].get("date") or "")), reverse=True
+    )
+    return [story for _, _, story in results[: max(1, min(k, 20))]]
 
 
 @mcp.tool()

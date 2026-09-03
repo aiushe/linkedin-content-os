@@ -22,3 +22,28 @@ def test_agent_exposes_the_same_mcp_preflight_tools(synthetic_corpus):
     assert voice_report["verdict"] == "pass"
     assert {item.name for item in tools.get_read_tools()} >= {"check_claims", "get_voice_report"}
     assert tools.CLAUDE_CODE_ONLY_MCP_TOOLS == {}
+
+
+def test_verified_metric_overlap_ranks_evidence_before_general_lexical_match(monkeypatch):
+    monkeypatch.setattr(
+        server,
+        "story_index",
+        lambda: [
+            {
+                "id": "lexical-only",
+                "title": "Improve routing time",
+                "metrics": [],
+                "date": "2026-01-02",
+            },
+            {
+                "id": "verified-metric",
+                "title": "A different title",
+                "metrics": [{"claim": "Reduced routing time by 30%", "verified": True}],
+                "date": "2026-01-01",
+            },
+        ],
+    )
+
+    results = _function(server.search_stories)("routing time", k=2)
+
+    assert [result["id"] for result in results] == ["verified-metric", "lexical-only"]
