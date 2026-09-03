@@ -108,7 +108,7 @@ those estimates with observed review time.
 
 | Lever | Change | Cluster targeted | Predicted delta | Measured delta |
 | --- | --- | --- | --- | --- |
-| Control flow | TBD | C1 | Intent completion approximately 60% to 100% | TBD |
+| Control flow | **Pre-registered before `improved-1`:** route `profile_rewrite` and `outreach` after intake instead of falling through to drafting. | C1 | Intent completion approximately 60% to 100%; +12 exact-trajectory cases, with router errors unchanged. | TBD |
 | Guardrail | TBD | Hedged claims | Hedged recall 0% to at least 70% | TBD |
 | Retrieval | TBD | Story top-1 +15pp | TBD | TBD |
 | Latency | TBD | C3 | p95 latency -40% | TBD |

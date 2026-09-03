@@ -25,6 +25,13 @@
   were captured. Keep markdown/API trace summaries as the interim substitute and capture the
   required redacted screenshots manually from authenticated LangSmith before submission.
 
+## Improvement 1 — preregistration
+
+- Before changing the graph, registered the C1 prediction: adding the existing profile-rewrite
+  and outreach branches after intake should convert the 12 known fall-through trajectories. This
+  predicts intent completion rising from 31.82% to approximately 59.09% before any router or
+  out-of-scope correction; no other metric is expected to improve directly.
+
 ## Phase 1 — instrumentation hardening
 
 - Added a direct LangSmith dependency so tracing is versioned by this project rather than only
